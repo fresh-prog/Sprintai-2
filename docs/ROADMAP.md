@@ -102,7 +102,7 @@ a manual measurement.
 - [x] Structured logs + Prometheus `/metrics` endpoint
 - [x] Docker image hardening (multi-stage, non-root, Trivy scan in CI)
 - [x] Backup strategy for Postgres (`scripts/backup/pg_backup.sh`) + uploads (restic guidance)
-- [x] CONTRIBUTING.md onboarding guide (screencast still TODO)
+- [x] CONTRIBUTING.md + screencast script & shot list (`docs/SCREENCAST.md`)
 
 ---
 
@@ -111,5 +111,5 @@ a manual measurement.
 - Multi-person tracking (MediaPipe Holistic + ReID)
 - Mobile app (React Native + MediaPipe iOS/Android)
 - Federated training across instances
-- Rep counting + exercise-specific form rubrics
-- Physio-grade reports (PDF)
+- [x] Rep counting + exercise-specific form rubrics (squat + push-up; biomech `/reps` endpoint)
+- [x] Physio-grade reports (PDF via pdfkit at `GET /sessions/:id/report.pdf`)

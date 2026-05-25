@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.js';
 import * as svc from '../services/session.service.js';
+import { streamSessionReport } from '../services/report.service.js';
 import { BadRequest } from '../utils/errors.js';
 
 const FRAME_LIMIT = 50_000;
@@ -59,6 +60,10 @@ export async function exportSession(req, res) {
   }
 
   throw BadRequest('UNSUPPORTED_FORMAT', `format must be 'json' or 'csv', got '${format}'`);
+}
+
+export async function exportReport(req, res) {
+  await streamSessionReport(req.user.id, req.params.id, res);
 }
 
 function serializeFrame(f) {

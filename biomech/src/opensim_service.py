@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from .gait import cadence_from_frames
 from .geometry import frame_angles, range_of_motion, robinson_symmetry
 from .ik import run_ik
+from .reps import count as count_reps
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -107,6 +108,18 @@ def gait(batch: FrameBatch) -> dict[str, Any]:
     # Pydantic → dicts for the existing geometry helpers.
     frames = [f.model_dump() for f in batch.frames]
     return cadence_from_frames(frames)
+
+
+class RepsRequest(FrameBatch):
+    exercise: str = "squat"
+
+
+@app.post("/reps")
+def reps(req: RepsRequest) -> dict[str, Any]:
+    frames = [f.model_dump() for f in req.frames]
+    if req.exercise not in ("squat", "pushup"):
+        raise HTTPException(status_code=400, detail=f"unsupported exercise: {req.exercise}")
+    return count_reps(frames, exercise=req.exercise)
 
 
 @app.post("/ik/run")

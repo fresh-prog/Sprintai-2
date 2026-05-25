@@ -108,6 +108,11 @@ Stream a session's frames, metrics, and predictions as a downloadable file.
 - `format=csv` returns a flat `ts_ms,name,value` series of metrics and
   prediction confidences — easy to drop into Excel / Pandas.
 
+### `GET /sessions/:id/report.pdf`
+Returns a single-page PDF session report (pdfkit-rendered) with capture
+summary, biomech metrics (ROM, symmetry, gait), and the top predictions by
+frequency. Streamed as `application/pdf`.
+
 ---
 
 ## WebSocket — `/ws/pose`

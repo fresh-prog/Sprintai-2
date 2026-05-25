@@ -12,6 +12,7 @@ r.get('/sessions/:id/metrics',     validate({ params: idParam }), ctrl.metrics);
 r.get('/sessions/:id/predictions', validate({ params: idParam }), ctrl.predictions);
 r.get('/sessions/:id/summary',     validate({ params: idParam }), ctrl.summary);
 r.get('/sessions/:id/export',      validate({ params: idParam }), exp.exportSession);
+r.get('/sessions/:id/report.pdf',  validate({ params: idParam }), exp.exportReport);
 
 r.get('/admin/overview', requireRole('ADMIN'), ctrl.adminOverview);
 

@@ -77,6 +77,13 @@ export default function SessionDetail() {
           >
             Export CSV
           </button>
+          <button
+            type="button"
+            className="btn-primary text-sm"
+            onClick={() => downloadAuthed(`/sessions/${id}/report.pdf`, `session-${id}-report.pdf`)}
+          >
+            PDF report
+          </button>
         </div>
       </header>
 
