@@ -16,7 +16,9 @@ async function safeCall(path, body) {
 
 export const biomechClient = {
   // Full IK pass on a completed session.
-  runInverseKinematics: (sessionId) => safeCall('/ik/run', { sessionId }),
+  runInverseKinematics: (sessionId, frames, rateHz = 30) =>
+    safeCall('/ik/run', { sessionId, frames, rateHz }),
   computeGait: (frames) => safeCall('/gait', { frames }),
   computeRom: (frames) => safeCall('/rom', { frames }),
+  computeSummary: (frames) => safeCall('/summary', { frames }),
 };

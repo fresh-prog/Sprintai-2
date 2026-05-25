@@ -62,13 +62,13 @@ events that match what you're actually doing.
 
 **Goal**: joint angles, ROM, symmetry, gait cadence.
 
-- [ ] Pure-Python angle module (no OpenSim) for hot path
-- [ ] OpenSim wrapper service (`opensim-core` PyPI) for IK on completed sessions
-- [ ] Symmetry index (Robinson) — left/right joint comparison
-- [ ] Gait cadence via heel-strike detection on ankle Y-velocity
-- [ ] ROM aggregation per joint per session
-- [ ] WebSocket `metric:angles` real-time emit
-- [ ] Background job: full IK pass on session completion
+- [x] Pure-Python angle module (no OpenSim) for hot path
+- [x] OpenSim wrapper service (`opensim-core` PyPI) for IK on completed sessions
+- [x] Symmetry index (Robinson) — left/right joint comparison
+- [x] Gait cadence via heel-strike detection on ankle Y-velocity
+- [x] ROM aggregation per joint per session
+- [x] WebSocket `metric:angles` real-time emit
+- [x] Background job: full IK pass on session completion
 
 **Done when** a recorded squat session reports peak knee flexion within 3° of
 a manual measurement.
@@ -79,11 +79,11 @@ a manual measurement.
 
 **Goal**: a dashboard that's worth looking at.
 
-- [ ] Session list page with filters
+- [x] Session list page with filters
 - [ ] Session detail: video/skeleton player + scrubbable timeline
-- [ ] Recharts: per-joint angle traces, predictions, confidence
-- [ ] Leaflet motion map: hip-center trajectory + heatmap of dwell time
-- [ ] Summary cards (peak ROM, symmetry, dominant activity)
+- [x] Recharts: per-joint angle traces, predictions, confidence
+- [x] Leaflet motion map: hip-center trajectory + heatmap of dwell time
+- [x] Summary cards (peak ROM, symmetry, dominant activity)
 - [ ] Export session as JSON / CSV
 
 **Done when** a non-engineer can open a session and explain what happened.
@@ -94,7 +94,8 @@ a manual measurement.
 
 **Goal**: production-ready.
 
-- [ ] Unit tests ≥ 70 % coverage for backend & ML feature code
+- [x] Unit tests for backend utils + auth integration test (Vitest + supertest)
+- [ ] Unit tests ≥ 70 % coverage for backend & ML feature code (in progress)
 - [ ] Playwright e2e: register → record → see prediction
 - [ ] Load test: 50 concurrent sessions on a 4-core box
 - [ ] Helmet, CSRF on cookie endpoints, rate limits

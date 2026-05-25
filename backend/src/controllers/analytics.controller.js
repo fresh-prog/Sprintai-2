@@ -27,10 +27,10 @@ export async function predictions(req, res) {
 
 export async function summary(req, res) {
   const session = await svc.getSession(req.user.id, req.params.id);
-  const [metricAgg, topPred, frameCount] = await Promise.all([
+  const [metricAgg, topPred, frameCount, summaryRows] = await Promise.all([
     prisma.metric.groupBy({
       by: ['name'],
-      where: { sessionId: session.id },
+      where: { sessionId: session.id, name: { not: { startsWith: 'summary.' } } },
       _max: { value: true },
       _min: { value: true },
       _avg: { value: true },
@@ -43,8 +43,21 @@ export async function summary(req, res) {
       take: 5,
     }),
     prisma.poseFrame.count({ where: { sessionId: session.id } }),
+    prisma.metric.findMany({
+      where: { sessionId: session.id, name: { startsWith: 'summary.' } },
+      orderBy: { name: 'asc' },
+    }),
   ]);
-  res.json({ session, metricAgg, topPred, frameCount });
+
+  // Pivot summary.* rows into a structured object.
+  const biomech = { rom: {}, symmetry: {}, gait: {} };
+  for (const row of summaryRows) {
+    const [, group, ...rest] = row.name.split('.');
+    const key = rest.join('.');
+    if (group in biomech) biomech[group][key] = row.value;
+  }
+
+  res.json({ session, metricAgg, topPred, frameCount, biomech });
 }
 
 export async function adminOverview(_req, res) {

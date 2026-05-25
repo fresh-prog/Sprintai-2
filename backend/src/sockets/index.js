@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { redis } from '../config/redis.js';
 import { ingestFrames } from '../services/pose.service.js';
+import { finalizeSession } from '../services/sessionFinalizer.service.js';
 import { mlClient } from '../services/ml.client.js';
 import { prisma } from '../config/db.js';
 
@@ -79,6 +80,9 @@ export function attachSockets(httpServer) {
         data: { status: 'COMPLETED', endedAt: new Date() },
       });
       socket.leave(`session:${sessionId}`);
+      finalizeSession(sessionId).catch((err) =>
+        logger.error({ err: err.message, sessionId }, 'finalize failed'),
+      );
     });
 
     socket.on('disconnect', () => {

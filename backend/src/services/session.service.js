@@ -1,5 +1,7 @@
 import { prisma } from '../config/db.js';
 import { Forbidden, NotFound } from '../utils/errors.js';
+import { finalizeSession } from './sessionFinalizer.service.js';
+import { logger } from '../config/logger.js';
 
 export async function createSession(userId, { label, source, meta }) {
   return prisma.session.create({
@@ -32,10 +34,20 @@ export async function getSession(userId, id) {
 
 export async function endSession(userId, id, status = 'COMPLETED') {
   await getSession(userId, id);
-  return prisma.session.update({
+  const updated = await prisma.session.update({
     where: { id },
     data: { status, endedAt: new Date() },
   });
+
+  // Fire-and-forget summary pass; surfaces in the dashboard once the biomech
+  // service replies. We deliberately don't await this so the HTTP response
+  // stays snappy.
+  if (status === 'COMPLETED') {
+    finalizeSession(id).catch((err) =>
+      logger.error({ err: err.message, sessionId: id }, 'finalize failed'),
+    );
+  }
+  return updated;
 }
 
 export async function deleteSession(userId, id) {

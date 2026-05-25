@@ -46,6 +46,12 @@ export default function SessionDetail() {
 
   if (!summary) return <p>Loading…</p>;
 
+  const biomech = summary.biomech ?? { rom: {}, symmetry: {}, gait: {} };
+  const cadence = biomech.gait?.cadence_spm;
+  const hasSummary = Object.keys(biomech.rom).length > 0
+                     || Object.keys(biomech.symmetry).length > 0
+                     || cadence != null;
+
   return (
     <div className="space-y-6">
       <header>
@@ -54,6 +60,30 @@ export default function SessionDetail() {
           {new Date(summary.session.startedAt).toLocaleString()} · {summary.frameCount} frames
         </p>
       </header>
+
+      {hasSummary && (
+        <section className="grid sm:grid-cols-3 gap-4">
+          {Object.entries(biomech.rom).map(([joint, range]) => (
+            <div className="card" key={`rom-${joint}`}>
+              <p className="text-sm text-slate-500">ROM · {joint}</p>
+              <p className="text-2xl font-bold">{range.toFixed(0)}°</p>
+            </div>
+          ))}
+          {Object.entries(biomech.symmetry).map(([pair, idx]) => (
+            <div className="card" key={`sym-${pair}`}>
+              <p className="text-sm text-slate-500">Symmetry · {pair}</p>
+              <p className="text-2xl font-bold">{idx.toFixed(1)}%</p>
+              <p className="text-xs text-slate-500">lower is better</p>
+            </div>
+          ))}
+          {cadence != null && (
+            <div className="card">
+              <p className="text-sm text-slate-500">Cadence</p>
+              <p className="text-2xl font-bold">{cadence.toFixed(0)} spm</p>
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <AngleChart data={series} dataKey="left_knee"  label="Left knee angle"  color="#2563eb" />

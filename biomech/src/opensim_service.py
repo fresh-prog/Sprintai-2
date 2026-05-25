@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from .gait import cadence_from_frames
 from .geometry import frame_angles, range_of_motion, robinson_symmetry
+from .ik import run_ik
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -48,6 +49,8 @@ class FrameBatch(BaseModel):
 
 class IkRequest(BaseModel):
     sessionId: str
+    frames: list[Frame] | None = None
+    rateHz: float = 30.0
 
 
 # ---------- Helpers ----------
@@ -107,19 +110,28 @@ def gait(batch: FrameBatch) -> dict[str, Any]:
 
 
 @app.post("/ik/run")
-def run_ik(req: IkRequest):
-    if not _OPENSIM_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "OpenSim Python bindings not installed. "
-                "Add `opensim==4.5.1` to biomech/requirements.txt to enable."
-            ),
-        )
-    # Real implementation lands in Phase 4 — see docs/ROADMAP.md.
-    # Outline:
-    #   1. Pull pose_frames for sessionId from Postgres (via backend HTTP).
-    #   2. Convert MediaPipe → TRC marker file (see opencap_processor pattern).
-    #   3. Run InverseKinematicsTool against a scaled gait2354 model.
-    #   4. Parse the .mot output, push joint angles back as Metric rows.
-    return {"status": "queued", "sessionId": req.sessionId}
+def ik_run(req: IkRequest):
+    if not req.frames:
+        raise HTTPException(status_code=400, detail="frames[] is required")
+    payload = [f.model_dump() for f in req.frames]
+    result = run_ik(payload, rate_hz=req.rateHz)
+    return {"sessionId": req.sessionId, **result}
+
+
+@app.post("/summary")
+def summary(batch: FrameBatch) -> dict[str, Any]:
+    """One-shot biomech report — used by the backend on session completion."""
+    arrs = _frames_to_array(batch.frames)
+    per_frame = [frame_angles(a) for a in arrs]
+
+    rom = range_of_motion(per_frame)
+    avg = {k: float(np.mean([f[k] for f in per_frame])) for k in per_frame[0]} if per_frame else {}
+    sym = {}
+    for name, l, r in (("knee", "left_knee", "right_knee"),
+                       ("hip",  "left_hip",  "right_hip"),
+                       ("elbow", "left_elbow", "right_elbow")):
+        if l in avg and r in avg:
+            sym[name] = robinson_symmetry(avg[l], avg[r])
+
+    gait = cadence_from_frames([f.model_dump() for f in batch.frames])
+    return {"rom": rom, "symmetry": sym, "gait": gait, "opensim": _OPENSIM_AVAILABLE}
