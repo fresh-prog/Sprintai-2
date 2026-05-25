@@ -100,6 +100,14 @@ Aggregate report: ROM, symmetry, gait cadence, top activity, mean confidence.
 ### `GET /admin/analytics`
 Admin-only aggregate (sessions/day, top activities, error rate).
 
+### `GET /sessions/:id/export?format=json|csv`
+Stream a session's frames, metrics, and predictions as a downloadable file.
+- `format=json` returns one object containing the session record, frames,
+  metrics, and predictions. Used by the "Export JSON" button on the session
+  detail page.
+- `format=csv` returns a flat `ts_ms,name,value` series of metrics and
+  prediction confidences — easy to drop into Excel / Pandas.
+
 ---
 
 ## WebSocket — `/ws/pose`

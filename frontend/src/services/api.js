@@ -36,4 +36,17 @@ api.interceptors.response.use(
   },
 );
 
+/** Trigger a browser download from an authenticated endpoint. */
+export async function downloadAuthed(url, filename) {
+  const res = await api.get(url, { responseType: 'blob' });
+  const href = URL.createObjectURL(res.data);
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
+}
+
 export default api;

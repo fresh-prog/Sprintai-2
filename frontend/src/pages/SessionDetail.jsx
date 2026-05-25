@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../services/api.js';
+import api, { downloadAuthed } from '../services/api.js';
 import AngleChart from '../components/AngleChart.jsx';
 import MovementMap from '../components/MovementMap.jsx';
+import SkeletonReplay from '../components/SkeletonReplay.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
@@ -54,11 +55,29 @@ export default function SessionDetail() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold">{summary.session.label}</h1>
-        <p className="text-slate-500 text-sm">
-          {new Date(summary.session.startedAt).toLocaleString()} · {summary.frameCount} frames
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{summary.session.label}</h1>
+          <p className="text-slate-500 text-sm">
+            {new Date(summary.session.startedAt).toLocaleString()} · {summary.frameCount} frames
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn-secondary text-sm"
+            onClick={() => downloadAuthed(`/sessions/${id}/export?format=json`, `session-${id}.json`)}
+          >
+            Export JSON
+          </button>
+          <button
+            type="button"
+            className="btn-secondary text-sm"
+            onClick={() => downloadAuthed(`/sessions/${id}/export?format=csv`, `session-${id}-metrics.csv`)}
+          >
+            Export CSV
+          </button>
+        </div>
       </header>
 
       {hasSummary && (
@@ -92,10 +111,16 @@ export default function SessionDetail() {
         <AngleChart data={series} dataKey="right_hip"  label="Right hip angle"  color="#dc2626" />
       </div>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Movement map (hip center)</h2>
-        <MovementMap points={trajectory} />
-      </section>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Skeleton replay</h2>
+          <SkeletonReplay frames={frames} />
+        </section>
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Movement map (hip center)</h2>
+          <MovementMap points={trajectory} />
+        </section>
+      </div>
     </div>
   );
 }

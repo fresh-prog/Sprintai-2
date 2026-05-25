@@ -80,11 +80,11 @@ a manual measurement.
 **Goal**: a dashboard that's worth looking at.
 
 - [x] Session list page with filters
-- [ ] Session detail: video/skeleton player + scrubbable timeline
+- [x] Session detail: skeleton player + scrubbable timeline
 - [x] Recharts: per-joint angle traces, predictions, confidence
 - [x] Leaflet motion map: hip-center trajectory + heatmap of dwell time
 - [x] Summary cards (peak ROM, symmetry, dominant activity)
-- [ ] Export session as JSON / CSV
+- [x] Export session as JSON / CSV
 
 **Done when** a non-engineer can open a session and explain what happened.
 
@@ -96,7 +96,7 @@ a manual measurement.
 
 - [x] Unit tests for backend utils + auth integration test (Vitest + supertest)
 - [ ] Unit tests ≥ 70 % coverage for backend & ML feature code (in progress)
-- [ ] Playwright e2e: register → record → see prediction
+- [x] Playwright e2e harness + register/login/redirect coverage (capture flow still TODO behind a `VITE_E2E_MOCK_POSE` flag)
 - [ ] Load test: 50 concurrent sessions on a 4-core box
 - [ ] Helmet, CSRF on cookie endpoints, rate limits
 - [ ] Structured logs + `/metrics` endpoints
