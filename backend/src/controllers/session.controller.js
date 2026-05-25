@@ -1,5 +1,6 @@
 import * as svc from '../services/session.service.js';
 import * as pose from '../services/pose.service.js';
+import { saveVideo } from '../services/upload.service.js';
 import { prisma } from '../config/db.js';
 
 export async function create(req, res) {
@@ -39,4 +40,10 @@ export async function getFrames(req, res) {
     take: 5000,
   });
   res.json({ frames });
+}
+
+export async function uploadVideo(req, res) {
+  await svc.getSession(req.user.id, req.params.id);
+  const asset = await saveVideo(req.params.id, req.file);
+  res.status(201).json({ videoAssetId: asset.id, sessionId: req.params.id });
 }

@@ -10,12 +10,12 @@ Each phase is **demoable on its own**. You should be able to merge phase N to
 **Goal**: anyone can clone the repo, run `docker compose up`, register, log in,
 see an empty dashboard.
 
-- [ ] Repo bootstrap, `.gitignore`, `README`, `.env.example`
-- [ ] `docker-compose.yml` with postgres + redis + node + vite
-- [ ] Backend skeleton: Express + Prisma + JWT auth + error middleware
-- [ ] Frontend skeleton: React + Vite + Tailwind + router + Zustand
-- [ ] Auth flow end-to-end (register/login/me/logout)
-- [ ] CI: lint + unit tests on PR
+- [x] Repo bootstrap, `.gitignore`, `README`, `.env.example`
+- [x] `docker-compose.yml` with postgres + redis + node + vite
+- [x] Backend skeleton: Express + Prisma + JWT auth + error middleware
+- [x] Frontend skeleton: React + Vite + Tailwind + router + Zustand
+- [x] Auth flow end-to-end (register/login/me/logout)
+- [x] CI: lint + unit tests on PR
 
 **Done when** new dev can finish "register → login → dashboard" in ≤ 5 min.
 
@@ -25,14 +25,14 @@ see an empty dashboard.
 
 **Goal**: live skeleton in the browser, frames flowing to the backend.
 
-- [ ] `useWebcam` hook with permissions + device selection
-- [ ] MediaPipe Pose initialization (Tasks Vision JS, WASM in `/public`)
-- [ ] Canvas overlay component (skeleton + landmark labels)
-- [ ] Frame batcher (8 frames per emit)
-- [ ] Socket.IO namespace `/ws/pose` with auth + rooms
-- [ ] Redis stream ingest + Node consumer
-- [ ] Down-sampled persistence to `pose_frame`
-- [ ] Session start/end controls
+- [x] `useWebcam` hook with permissions + device selection
+- [x] MediaPipe Pose initialization (Tasks Vision JS, WASM in `/public`)
+- [x] Canvas overlay component (skeleton + landmark labels)
+- [x] Frame batcher (8 frames per emit)
+- [x] Socket.IO namespace `/ws/pose` with auth + rooms
+- [x] Redis stream ingest + Node consumer
+- [x] Down-sampled persistence to `pose_frame`
+- [x] Session start/end controls
 
 **Done when** a recorded 30 s webcam session shows up in `pose_frame` and the
 overlay is smooth (≥ 25 fps).
@@ -43,14 +43,14 @@ overlay is smooth (≥ 25 fps).
 
 **Goal**: posture + activity classification on the live stream.
 
-- [ ] Feature extractor (33 keypoints → angle/ratio vector)
-- [ ] Posture classifier: small MLP, 5 classes
+- [x] Feature extractor (33 keypoints → angle/ratio vector)
+- [x] Posture classifier: small MLP, 5 classes
       (`upright | hunched | leaning_left | leaning_right | slouched`)
-- [ ] Activity classifier: TCN, 6 classes
+- [x] Activity classifier: TCN, 6 classes
       (`idle | walk | run | squat | jump | sit`)
-- [ ] Training scripts on a synthetic + open dataset (e.g. UCF-Pose subset)
-- [ ] FastAPI inference server (`/predict/posture`, `/predict/activity`)
-- [ ] Node client + Socket.IO emit of predictions
+- [x] Training scripts on a synthetic + open dataset (synthetic ready; UCF-Pose ingest TODO)
+- [x] FastAPI inference server (`/predict/posture`, `/predict/activity`)
+- [x] Node client + Socket.IO emit of predictions
 - [ ] In-browser TF.js model option for offline mode
 
 **Done when** moving in front of the webcam triggers `prediction:activity`
