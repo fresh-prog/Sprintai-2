@@ -8,6 +8,7 @@ import pinoHttp from 'pino-http';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { errorHandler, notFound } from './middleware/error.js';
+import { httpDurationMiddleware, metricsHandler } from './observability/metrics.js';
 
 import authRoutes from './routes/auth.routes.js';
 import sessionRoutes from './routes/session.routes.js';
@@ -21,6 +22,7 @@ export function buildApp() {
   app.use(express.json({ limit: '2mb' }));
   app.use(cookieParser());
   app.use(pinoHttp({ logger }));
+  app.use(httpDurationMiddleware);
 
   app.use(
     '/api/',
@@ -33,6 +35,7 @@ export function buildApp() {
   );
 
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
+  app.get('/metrics', metricsHandler);
 
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/sessions', sessionRoutes);

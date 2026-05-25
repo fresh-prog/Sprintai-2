@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.js';
 import { jointAngles, symmetryIndex } from '../utils/angles.js';
+import { framesIngested, framesPersisted } from '../observability/metrics.js';
 
 const PERSIST_EVERY_N = 5; // Down-sample 30 fps → ~6 fps for storage.
 
@@ -9,8 +10,10 @@ const PERSIST_EVERY_N = 5; // Down-sample 30 fps → ~6 fps for storage.
  * dashboard has data even without the biomech service running.
  */
 export async function ingestFrames(sessionId, frames) {
+  framesIngested.inc(frames.length);
   const kept = frames.filter((f) => f.frameIdx % PERSIST_EVERY_N === 0);
   if (kept.length === 0) return { persisted: 0 };
+  framesPersisted.inc(kept.length);
 
   // Tx so partial failure doesn't leave dangling rows.
   await prisma.$transaction(async (tx) => {

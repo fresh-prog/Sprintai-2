@@ -47,7 +47,9 @@ services:
       - biomech-output:/app/output
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: dev
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -67,7 +69,9 @@ services:
       - uploads:/app/uploads
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     restart: unless-stopped
     env_file: .env
     depends_on:

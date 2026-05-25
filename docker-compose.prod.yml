@@ -1,0 +1,32 @@
+# Production overlay: builds the `production` stage of each Dockerfile and
+# drops the source-volume mounts so the container is immutable.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: production
+    environment:
+      NODE_ENV: production
+    volumes:
+      - uploads:/app/uploads
+    # Override the dev bind-mount that docker-compose.yml carries.
+    command: ["node", "src/server.js"]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    ports:
+      - "8080:8080"
+    volumes: []
+    # Static bundle is baked into the image; no command override needed.
+
+  ml:
+    command: ["uvicorn", "src.inference_server:app", "--host", "0.0.0.0", "--port", "8001"]
+
+  biomech:
+    command: ["uvicorn", "src.opensim_service:app", "--host", "0.0.0.0", "--port", "8002"]

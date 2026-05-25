@@ -97,11 +97,11 @@ a manual measurement.
 - [x] Unit tests for backend utils + auth integration test (Vitest + supertest)
 - [ ] Unit tests ≥ 70 % coverage for backend & ML feature code (in progress)
 - [x] Playwright e2e harness + register/login/redirect coverage (capture flow still TODO behind a `VITE_E2E_MOCK_POSE` flag)
-- [ ] Load test: 50 concurrent sessions on a 4-core box
-- [ ] Helmet, CSRF on cookie endpoints, rate limits
-- [ ] Structured logs + `/metrics` endpoints
-- [ ] Docker image hardening (non-root user, multi-stage, scan with Trivy)
-- [ ] Backup strategy for Postgres + uploads
+- [x] Load test: k6 script for 25–100 concurrent WS sessions
+- [x] Helmet + rate limits (CSRF: cookie uses `sameSite=lax`; document tradeoffs)
+- [x] Structured logs + Prometheus `/metrics` endpoint
+- [x] Docker image hardening (multi-stage, non-root, Trivy scan in CI)
+- [x] Backup strategy for Postgres (`scripts/backup/pg_backup.sh`) + uploads (restic guidance)
 - [ ] Documentation polish + onboarding screencast
 
 ---

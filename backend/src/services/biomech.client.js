@@ -1,17 +1,20 @@
 import axios from 'axios';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
+import { timeExternal } from '../observability/metrics.js';
 
 const client = axios.create({ baseURL: env.BIOMECH_SERVICE_URL, timeout: 30_000 });
 
 async function safeCall(path, body) {
-  try {
-    const { data } = await client.post(path, body);
-    return data;
-  } catch (err) {
-    logger.warn({ err: err.message, path }, 'biomech service call failed');
-    return null;
-  }
+  return timeExternal('biomech', path, async () => {
+    try {
+      const { data } = await client.post(path, body);
+      return data;
+    } catch (err) {
+      logger.warn({ err: err.message, path }, 'biomech service call failed');
+      return null;
+    }
+  });
 }
 
 export const biomechClient = {

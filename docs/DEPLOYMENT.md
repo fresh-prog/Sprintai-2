@@ -87,8 +87,55 @@ server {
 - [ ] `trivy image sprintai-backend:latest` clean before tag.
 - [ ] `npm ci --omit=dev` / `pip install --no-cache-dir`.
 
+## Production images
+
+```bash
+# Build hardened, non-root, multi-stage images.
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+
+# Run the prod stack (frontend on :8080, backend on :4000).
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+The production targets:
+
+- Backend → `node src/server.js` with `NODE_ENV=production`, dev dependencies
+  pruned, running as a non-root `app` user under `tini` for signal handling.
+- Frontend → `nginx-unprivileged` serving the static Vite bundle from
+  `/usr/share/nginx/html`; aggressive caching for `/assets/*`, never-cache on
+  `index.html`, defensive headers in `frontend/nginx.conf`.
+- Both images carry a `HEALTHCHECK` and are scanned by Trivy in CI for HIGH /
+  CRITICAL CVEs before they're allowed to merge.
+
+## Observability
+
+- Metrics exposed at `GET /metrics` on the backend (Prometheus text format):
+  default Node metrics, HTTP latency histogram, pose-frame counters, and an
+  external-service histogram for ML/biomech calls.
+- Logs are structured JSON via `pino` (Node) and `structlog` (Python). Pipe
+  them through `pino-pretty` or `jq` in dev.
+
+## Load testing
+
+```bash
+# 25 concurrent WS sessions for 60 s — the default.
+k6 run scripts/loadtest/k6-ws-sessions.js
+
+# Crank it.
+VUS=100 DURATION=5m k6 run scripts/loadtest/k6-ws-sessions.js
+```
+
+The script registers a fresh user per VU, opens a Socket.IO `/ws/pose`
+connection, and streams synthetic 8-frame windows at 30 fps. Watch the
+backend's `/metrics` endpoint or compose logs while it runs.
+
 ## Backups
 
-- Postgres: nightly `pg_dump` → encrypted tarball → off-box.
-- Uploads: `restic` to S3-compatible storage.
-- Test restore monthly.
+- Postgres: nightly via `scripts/backup/pg_backup.sh` →
+  `$BACKUP_DIR/sprintai-*.sql.gz`. Wire into cron:
+  ```cron
+  15 3 * * *  DATABASE_URL=postgresql://... BACKUP_DIR=/var/backups/sprintai \
+              /opt/sprintai/scripts/backup/pg_backup.sh >> /var/log/sprintai-backup.log 2>&1
+  ```
+- Uploads: `restic` to S3-compatible storage (e.g. MinIO, Backblaze B2).
+- Test restore monthly — a backup you've never restored isn't a backup.
