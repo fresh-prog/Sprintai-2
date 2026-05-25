@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sprintai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sprintai_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-sprintai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sprintai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  ml:
+    build: ./ml
+    restart: unless-stopped
+    environment:
+      ML_PORT: 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ml:/app
+      - ml-checkpoints:/app/checkpoints
+
+  biomech:
+    build: ./biomech
+    restart: unless-stopped
+    environment:
+      BIOMECH_PORT: 8002
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./biomech:/app
+      - biomech-output:/app/output
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ml:
+        condition: service_started
+      biomech:
+        condition: service_started
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres-data:
+  redis-data:
+  ml-checkpoints:
+  biomech-output:
+  uploads:

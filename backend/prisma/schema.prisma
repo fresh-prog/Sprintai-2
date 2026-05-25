@@ -1,0 +1,131 @@
+// Prisma schema — see docs/DATABASE.md for ER diagram.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SessionSource {
+  WEBCAM
+  UPLOAD
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+enum PredictionKind {
+  POSTURE
+  ACTIVITY
+  INJURY_RISK
+  FORM
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  displayName   String         @map("display_name")
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+
+  @@map("user")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz()
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("refresh_token")
+}
+
+model Session {
+  id          String         @id @default(uuid()) @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
+  label       String
+  source      SessionSource
+  status      SessionStatus  @default(ACTIVE)
+  startedAt   DateTime       @default(now()) @map("started_at") @db.Timestamptz()
+  endedAt     DateTime?      @map("ended_at") @db.Timestamptz()
+  meta        Json           @default("{}")
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoAsset  VideoAsset?
+  poseFrames  PoseFrame[]
+  metrics     Metric[]
+  predictions Prediction[]
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("session")
+}
+
+model VideoAsset {
+  id          String   @id @default(uuid()) @db.Uuid
+  sessionId   String   @unique @map("session_id") @db.Uuid
+  storagePath String   @map("storage_path")
+  durationMs  Int?     @map("duration_ms")
+  width       Int?
+  height      Int?
+  uploadedAt  DateTime @default(now()) @map("uploaded_at") @db.Timestamptz()
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("video_asset")
+}
+
+model PoseFrame {
+  id         BigInt  @id @default(autoincrement())
+  sessionId  String  @map("session_id") @db.Uuid
+  frameIdx   Int     @map("frame_idx")
+  tsMs       Int     @map("ts_ms")
+  keypoints  Json
+  confidence Float
+  session    Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, frameIdx])
+  @@map("pose_frame")
+}
+
+model Metric {
+  id        BigInt  @id @default(autoincrement())
+  sessionId String  @map("session_id") @db.Uuid
+  name      String
+  tsMs      Int     @map("ts_ms")
+  value     Float
+  meta      Json    @default("{}")
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, name, tsMs])
+  @@map("metric")
+}
+
+model Prediction {
+  id         BigInt         @id @default(autoincrement())
+  sessionId  String         @map("session_id") @db.Uuid
+  kind       PredictionKind
+  tsMs       Int            @map("ts_ms")
+  label      String
+  confidence Float
+  meta       Json           @default("{}")
+  session    Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, kind, tsMs])
+  @@map("prediction")
+}

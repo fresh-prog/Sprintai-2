@@ -1,0 +1,45 @@
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import pinoHttp from 'pino-http';
+
+import { env } from './config/env.js';
+import { logger } from './config/logger.js';
+import { errorHandler, notFound } from './middleware/error.js';
+
+import authRoutes from './routes/auth.routes.js';
+import sessionRoutes from './routes/session.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+
+export function buildApp() {
+  const app = express();
+
+  app.use(helmet());
+  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(express.json({ limit: '2mb' }));
+  app.use(cookieParser());
+  app.use(pinoHttp({ logger }));
+
+  app.use(
+    '/api/',
+    rateLimit({
+      windowMs: env.RATE_LIMIT_WINDOW_MS,
+      max: env.RATE_LIMIT_MAX,
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+
+  app.get('/healthz', (_req, res) => res.json({ ok: true }));
+
+  app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/sessions', sessionRoutes);
+  app.use('/api/v1', analyticsRoutes);
+
+  app.use(notFound);
+  app.use(errorHandler);
+
+  return app;
+}
