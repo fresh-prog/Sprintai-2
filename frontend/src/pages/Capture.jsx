@@ -3,6 +3,7 @@ import { useWebcam } from '../hooks/useWebcam.js';
 import { usePoseDetector } from '../hooks/usePoseDetector.js';
 import { drawSkeleton } from '../utils/skeleton.js';
 import { connectPoseSocket } from '../services/ws.js';
+import { posturePredictor } from '../services/tfjsInference.js';
 import api from '../services/api.js';
 
 const WIDTH = 640;
@@ -21,6 +22,7 @@ export default function Capture() {
   const bufferRef = useRef([]);
   const frameIdxRef = useRef(0);
   const rafRef = useRef(null);
+  const lastLocalPredAt = useRef(0);
 
   async function startSession() {
     const { data } = await api.post('/sessions', { label: `Capture ${new Date().toLocaleString()}`, source: 'WEBCAM' });
@@ -63,6 +65,14 @@ export default function Capture() {
           const window = bufferRef.current.splice(0, WINDOW_SIZE);
           socketRef.current?.emit('pose:window', { frames: window });
         }
+
+        // Offline-mode fallback: if the WS is disconnected we still want a
+        // posture readout for the user. Throttled to once every 500 ms so we
+        // don't tank the frame rate.
+        if (!socketRef.current?.connected && t - lastLocalPredAt.current > 500) {
+          lastLocalPredAt.current = t;
+          posturePredictor.predict(lm).then((p) => { if (p) setPosture(p); });
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     }
@@ -89,7 +99,12 @@ export default function Capture() {
       <div className="grid sm:grid-cols-3 gap-4 max-w-3xl">
         {posture && (
           <div className="card">
-            <p className="text-sm text-slate-500">Posture</p>
+            <p className="text-sm text-slate-500 flex items-center gap-2">
+              Posture
+              {posture.offline && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 uppercase tracking-wide">offline</span>
+              )}
+            </p>
             <p className="text-2xl font-bold">{posture.label}</p>
             <p className="text-sm">confidence {(posture.confidence * 100).toFixed(1)}%</p>
           </div>

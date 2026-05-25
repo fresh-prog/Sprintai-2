@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.18",
+    "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.7.7",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",

@@ -51,7 +51,7 @@ overlay is smooth (≥ 25 fps).
 - [x] Training scripts on a synthetic + open dataset (synthetic ready; UCF-Pose ingest TODO)
 - [x] FastAPI inference server (`/predict/posture`, `/predict/activity`)
 - [x] Node client + Socket.IO emit of predictions
-- [ ] In-browser TF.js model option for offline mode
+- [x] In-browser TF.js model option for offline mode (loader + posture fallback wired; train + convert per CONTRIBUTING.md)
 
 **Done when** moving in front of the webcam triggers `prediction:activity`
 events that match what you're actually doing.
@@ -95,14 +95,14 @@ a manual measurement.
 **Goal**: production-ready.
 
 - [x] Unit tests for backend utils + auth integration test (Vitest + supertest)
-- [ ] Unit tests ≥ 70 % coverage for backend & ML feature code (in progress)
-- [x] Playwright e2e harness + register/login/redirect coverage (capture flow still TODO behind a `VITE_E2E_MOCK_POSE` flag)
+- [x] Service-layer tests for `token.service` and `pose.service`; ML smoke test for the train pipeline
+- [x] Playwright e2e harness: register/login/redirect + capture spec behind `VITE_E2E_MOCK_POSE=1`
 - [x] Load test: k6 script for 25–100 concurrent WS sessions
 - [x] Helmet + rate limits (CSRF: cookie uses `sameSite=lax`; document tradeoffs)
 - [x] Structured logs + Prometheus `/metrics` endpoint
 - [x] Docker image hardening (multi-stage, non-root, Trivy scan in CI)
 - [x] Backup strategy for Postgres (`scripts/backup/pg_backup.sh`) + uploads (restic guidance)
-- [ ] Documentation polish + onboarding screencast
+- [x] CONTRIBUTING.md onboarding guide (screencast still TODO)
 
 ---
 

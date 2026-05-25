@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 
+const E2E_MOCK = import.meta.env.VITE_E2E_MOCK_POSE === '1';
+
 /**
  * Initialize a MediaPipe Pose detector once and expose a `detect` callable.
- * Detector runs in VIDEO mode for streaming use.
+ * Detector runs in VIDEO mode for streaming use. When the
+ * VITE_E2E_MOCK_POSE flag is set, we skip the real WASM model load and
+ * return a deterministic landmark array — used by the Playwright capture
+ * spec so it doesn't need a real camera or GPU.
  */
 export function usePoseDetector() {
   const detectorRef = useRef(null);
@@ -12,6 +17,23 @@ export function usePoseDetector() {
 
   useEffect(() => {
     let cancelled = false;
+    if (E2E_MOCK) {
+      // Deterministic 33-landmark fixture, slightly perturbed each call so
+      // the buffer flush logic still has something to do.
+      detectorRef.current = {
+        detectForVideo: () => ({
+          landmarks: [Array.from({ length: 33 }, (_, i) => ({
+            x: 0.5 + Math.sin(performance.now() / 1000 + i) * 0.01,
+            y: 0.5 + Math.cos(performance.now() / 1000 + i) * 0.01,
+            z: 0,
+            visibility: 1,
+          }))],
+        }),
+        close: () => {},
+      };
+      setReady(true);
+      return () => { cancelled = true; };
+    }
     async function init() {
       try {
         const fileset = await FilesetResolver.forVisionTasks(
