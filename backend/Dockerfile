@@ -11,7 +11,9 @@ WORKDIR /app
 RUN apt-get update \
  && apt-get install -y --no-install-recommends tini openssl ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
- && groupadd -r app && useradd -r -g app app
+ && groupadd -r app && useradd -r -g app -m -d /home/app app \
+ && mkdir -p /home/app/.npm && chown -R app:app /home/app
+ENV NPM_CONFIG_CACHE=/home/app/.npm
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # ---------- deps ----------
