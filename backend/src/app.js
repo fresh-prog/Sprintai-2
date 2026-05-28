@@ -1,4 +1,8 @@
 import express from 'express';
+// Side-effect import: monkey-patches Express 4 so async controllers that
+// throw or reject are routed to our errorHandler instead of crashing the
+// process as an unhandled promise rejection. Must come before any router.
+import 'express-async-errors';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
