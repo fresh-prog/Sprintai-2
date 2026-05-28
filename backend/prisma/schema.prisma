@@ -1,7 +1,11 @@
 // Prisma schema — see docs/DATABASE.md for ER diagram.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Alpine in the prod/dev image is musl + OpenSSL 3.x; "native" covers
+  // host runs (mac/windows/linux). Pin both so prisma picks the right
+  // engine binary instead of guessing and crashing on libssl detection.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
