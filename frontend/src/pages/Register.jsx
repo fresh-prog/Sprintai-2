@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
+import { AuthShell } from './Login.jsx';
 
 export default function Register() {
   const register = useAuthStore((s) => s.register);
@@ -16,7 +17,7 @@ export default function Register() {
     setBusy(true); setErr('');
     try {
       await register(form.email, form.password, form.displayName);
-      nav('/');
+      nav('/dashboard');
     } catch (e) {
       setErr(e.response?.data?.error?.message ?? 'Registration failed');
     } finally {
@@ -25,18 +26,25 @@ export default function Register() {
   }
 
   return (
-    <div className="max-w-md mx-auto card mt-10">
-      <h1 className="text-2xl font-bold mb-4">Create your account</h1>
+    <AuthShell title="Join Sprint AI" subtitle="Discover your sprint potential — anywhere, with just a phone.">
       <form onSubmit={onSubmit} className="space-y-4">
-        <input className="input" placeholder="Display name" value={form.displayName} onChange={update('displayName')} required />
-        <input className="input" type="email" placeholder="Email" value={form.email} onChange={update('email')} required />
-        <input className="input" type="password" placeholder="Password (min 8 chars)" minLength={8} value={form.password} onChange={update('password')} required />
-        {err && <p className="text-red-600 text-sm">{err}</p>}
-        <button className="btn-primary w-full" disabled={busy}>{busy ? 'Creating…' : 'Create account'}</button>
+        <input className="input" placeholder="Display name"
+               value={form.displayName} onChange={update('displayName')} required />
+        <input className="input" type="email" placeholder="Email"
+               value={form.email} onChange={update('email')} required />
+        <input className="input" type="password" placeholder="Password (min 8 chars)"
+               minLength={8} value={form.password} onChange={update('password')} required />
+        {err && <p className="text-sprint-coral text-sm">{err}</p>}
+        <button className="btn-primary w-full" disabled={busy}>
+          {busy ? 'Creating…' : 'Create account →'}
+        </button>
       </form>
-      <p className="text-sm text-slate-600 mt-4">
-        Already have one? <Link to="/login" className="text-brand-600">Sign in</Link>
+      <p className="text-sm text-slate-400 mt-6 text-center">
+        Already have one?{' '}
+        <Link to="/login" className="text-sprint-orange hover:text-sprint-orange-bright font-semibold">
+          Sign in
+        </Link>
       </p>
-    </div>
+    </AuthShell>
   );
 }

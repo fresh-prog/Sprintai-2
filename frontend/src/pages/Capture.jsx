@@ -81,17 +81,23 @@ export default function Capture() {
   }, [sessionId, camReady, poseReady, detect, videoRef]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">Live capture</h1>
-        {sessionId
-          ? <button onClick={stopSession} className="btn-secondary">Stop session</button>
-          : <button onClick={startSession} className="btn-primary" disabled={!camReady || !poseReady}>
-              {camReady && poseReady ? 'Start session' : 'Loading…'}
-            </button>}
-      </div>
+    <div className="space-y-6">
+      <header>
+        <p className="section-eyebrow">Sprint Capture</p>
+        <h1 className="font-display text-5xl text-white mt-2 flex items-center gap-4 flex-wrap">
+          LIVE CAPTURE
+          {sessionId
+            ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
+            : <button onClick={startSession} className="btn-primary text-sm" disabled={!camReady || !poseReady}>
+                {camReady && poseReady ? 'Start session →' : 'Loading…'}
+              </button>}
+        </h1>
+        <p className="text-slate-300 mt-2 max-w-2xl">
+          Film a 40m run — we extract 33 body landmarks per frame for biomechanical scoring.
+        </p>
+      </header>
 
-      <div className="relative inline-block rounded-2xl overflow-hidden border border-slate-200">
+      <div className="relative inline-block rounded-2xl overflow-hidden border border-sprint-teal/30 shadow-2xl shadow-black/40">
         <video ref={videoRef} className="hidden" width={WIDTH} height={HEIGHT} muted playsInline />
         <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} className="block" />
       </div>
@@ -99,31 +105,31 @@ export default function Capture() {
       <div className="grid sm:grid-cols-3 gap-4 max-w-3xl">
         {posture && (
           <div className="card">
-            <p className="text-sm text-slate-500 flex items-center gap-2">
+            <p className="text-sm text-slate-400 flex items-center gap-2">
               Posture
               {posture.offline && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 uppercase tracking-wide">offline</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-sprint-orange/20 text-sprint-orange uppercase tracking-wide">offline</span>
               )}
             </p>
-            <p className="text-2xl font-bold">{posture.label}</p>
-            <p className="text-sm">confidence {(posture.confidence * 100).toFixed(1)}%</p>
+            <p className="font-display text-3xl text-sprint-orange mt-1">{posture.label}</p>
+            <p className="text-sm text-slate-400 mt-1">confidence {(posture.confidence * 100).toFixed(1)}%</p>
           </div>
         )}
         {activity && (
           <div className="card">
-            <p className="text-sm text-slate-500">Activity</p>
-            <p className="text-2xl font-bold">{activity.label}</p>
-            <p className="text-sm">confidence {(activity.confidence * 100).toFixed(1)}%</p>
+            <p className="text-sm text-slate-400">Activity</p>
+            <p className="font-display text-3xl text-sprint-teal mt-1">{activity.label}</p>
+            <p className="text-sm text-slate-400 mt-1">confidence {(activity.confidence * 100).toFixed(1)}%</p>
           </div>
         )}
         {liveAngles && (
           <div className="card">
-            <p className="text-sm text-slate-500">Live joint angles</p>
-            <ul className="text-sm space-y-0.5">
-              <li>L knee: {liveAngles.left_knee?.toFixed(0)}°</li>
-              <li>R knee: {liveAngles.right_knee?.toFixed(0)}°</li>
-              <li>L hip:  {liveAngles.left_hip?.toFixed(0)}°</li>
-              <li>R hip:  {liveAngles.right_hip?.toFixed(0)}°</li>
+            <p className="text-sm text-slate-400 mb-2">Live joint angles</p>
+            <ul className="text-sm space-y-0.5 text-slate-200">
+              <li>L knee: <span className="text-sprint-orange font-mono">{liveAngles.left_knee?.toFixed(0)}°</span></li>
+              <li>R knee: <span className="text-sprint-orange font-mono">{liveAngles.right_knee?.toFixed(0)}°</span></li>
+              <li>L hip:  <span className="text-sprint-orange font-mono">{liveAngles.left_hip?.toFixed(0)}°</span></li>
+              <li>R hip:  <span className="text-sprint-orange font-mono">{liveAngles.right_hip?.toFixed(0)}°</span></li>
             </ul>
           </div>
         )}

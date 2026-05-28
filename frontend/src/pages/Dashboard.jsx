@@ -1,48 +1,134 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api.js';
+import { useAuthStore } from '../store/authStore.js';
 
 export default function Dashboard() {
+  const user = useAuthStore((s) => s.user);
   const [recent, setRecent] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    api.get('/sessions?limit=5').then(({ data }) => setRecent(data.data ?? []));
+    api.get('/sessions?limit=5')
+      .then(({ data }) => setRecent(data.data ?? []))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Welcome back</h1>
-      <div className="grid md:grid-cols-3 gap-4">
-        <Link to="/capture" className="card hover:shadow-md transition">
-          <p className="text-sm text-slate-500">Start a session</p>
-          <p className="text-xl font-semibold">Live webcam capture</p>
-        </Link>
-        <Link to="/sessions" className="card hover:shadow-md transition">
-          <p className="text-sm text-slate-500">Browse</p>
-          <p className="text-xl font-semibold">All sessions</p>
-        </Link>
-        <div className="card">
-          <p className="text-sm text-slate-500">Recent</p>
-          <p className="text-xl font-semibold">{recent.length} session{recent.length === 1 ? '' : 's'}</p>
+    <div className="space-y-10">
+      <header>
+        <p className="section-eyebrow">Athlete Dashboard</p>
+        <h1 className="font-display text-5xl md:text-6xl text-white mt-2">
+          Welcome, <span className="text-sprint-orange">{user?.displayName || 'Athlete'}</span>
+        </h1>
+        <p className="text-slate-300 mt-3 max-w-2xl">
+          Record a sprint, get a biomechanical talent score, and see how your form stacks up
+          against elite profiles.
+        </p>
+      </header>
+
+      <section className="grid md:grid-cols-3 gap-5">
+        <ActionCard
+          to="/capture"
+          eyebrow="01 · Record"
+          title="Live capture"
+          body="Film a 40m run from any webcam. We extract 33 body landmarks per frame in real time."
+          accent="teal"
+        />
+        <ActionCard
+          to="/sessions"
+          eyebrow="02 · Analyze"
+          title="My sessions"
+          body="Review past sprints, stride mechanics, range of motion, and symmetry metrics."
+          accent="orange"
+        />
+        <div className="card-stat min-h-[200px]">
+          <div className="stat-number">{recent.length}</div>
+          <div className="stat-label">
+            recent {recent.length === 1 ? 'session' : 'sessions'} on file
+          </div>
         </div>
-      </div>
+      </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Recent sessions</h2>
-        <ul className="divide-y border rounded-2xl bg-white">
-          {recent.length === 0 && <li className="p-4 text-slate-500">No sessions yet — start one!</li>}
-          {recent.map((s) => (
-            <li key={s.id} className="p-4 flex items-center justify-between">
-              <div>
-                <Link to={`/sessions/${s.id}`} className="font-medium text-brand-700 hover:underline">
-                  {s.label}
-                </Link>
-                <p className="text-sm text-slate-500">{new Date(s.startedAt).toLocaleString()} · {s.status}</p>
-              </div>
-              <span className="text-xs px-2 py-1 rounded bg-slate-100">{s.source}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="font-display text-3xl text-white tracking-wide">RECENT SESSIONS</h2>
+          {recent.length > 0 && (
+            <Link to="/sessions" className="text-sprint-teal hover:text-white text-sm">
+              View all →
+            </Link>
+          )}
+        </div>
+
+        {loading ? (
+          <p className="text-slate-400">Loading…</p>
+        ) : recent.length === 0 ? (
+          <div className="card text-center py-12">
+            <p className="text-slate-300 mb-4">No sessions yet — record your first sprint.</p>
+            <Link to="/capture" className="btn-primary">Start a capture →</Link>
+          </div>
+        ) : (
+          <ul className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-navy-700/40 overflow-hidden">
+            {recent.map((s) => (
+              <li key={s.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition">
+                <div>
+                  <Link to={`/sessions/${s.id}`} className="font-semibold text-white hover:text-sprint-orange">
+                    {s.label}
+                  </Link>
+                  <p className="text-sm text-slate-400">
+                    {new Date(s.startedAt).toLocaleString()} · {s.status}
+                  </p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded bg-sprint-teal/15 text-sprint-teal border border-sprint-teal/30">
+                  {s.source}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
+
+      <WhatWeMeasure />
     </div>
+  );
+}
+
+function ActionCard({ to, eyebrow, title, body, accent }) {
+  const accentClass = {
+    teal: 'border-sprint-teal/40 hover:border-sprint-teal',
+    orange: 'border-sprint-orange/40 hover:border-sprint-orange',
+    coral: 'border-sprint-coral/40 hover:border-sprint-coral',
+  }[accent];
+  return (
+    <Link
+      to={to}
+      className={`card ${accentClass} transition group block`}
+    >
+      <p className="section-eyebrow">{eyebrow}</p>
+      <h3 className="font-display text-3xl text-white mt-2 group-hover:text-sprint-orange transition">
+        {title}
+      </h3>
+      <p className="text-slate-300 mt-2">{body}</p>
+    </Link>
+  );
+}
+
+function WhatWeMeasure() {
+  const items = [
+    'Stride length & frequency', 'Ground contact time', 'Hip extension angle',
+    'Arm drive mechanics',       'Acceleration curve',  'Reaction time patterns',
+  ];
+  return (
+    <section className="card border border-sprint-teal/30">
+      <p className="section-eyebrow">What we measure</p>
+      <h3 className="font-display text-3xl text-white mt-2 mb-4">YOUR BIOMECHANICAL SIGNATURE</h3>
+      <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {items.map((m) => (
+          <li key={m} className="flex items-center gap-2 text-slate-200">
+            <span className="text-sprint-orange">✦</span> {m}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

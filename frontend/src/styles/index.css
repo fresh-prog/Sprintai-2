@@ -2,18 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,166,35,0.10), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(30,197,197,0.08), transparent 60%),
+      #060c1c;
+    min-height: 100vh;
+  }
+  .font-display { font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 0.02em; }
+}
+
 @layer components {
+  /* ---------- Buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium
-           transition disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-lg px-5 py-2.5 font-semibold
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
-  .btn-secondary { @apply btn bg-slate-200 text-slate-900 hover:bg-slate-300; }
+  .btn-primary {
+    @apply btn bg-sprint-orange text-navy-900 hover:bg-sprint-orange-bright
+           shadow-lg shadow-sprint-orange/20 hover:shadow-sprint-orange/40;
+  }
+  .btn-secondary {
+    @apply btn border border-sprint-teal/40 text-sprint-teal hover:bg-sprint-teal/10;
+  }
+  .btn-ghost {
+    @apply btn text-slate-300 hover:text-white hover:bg-white/5;
+  }
+
+  /* ---------- Cards ---------- */
   .card {
-    @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm;
+    @apply rounded-2xl border border-white/10 bg-navy-700/60 backdrop-blur p-6
+           shadow-xl shadow-black/20;
   }
+  .card-stat {
+    @apply card flex flex-col items-center justify-center text-center
+           border-sprint-teal/40 hover:border-sprint-teal transition-colors;
+  }
+  .card-bordered-coral { @apply card border-l-4 border-l-sprint-coral; }
+  .card-bordered-teal  { @apply card border-l-4 border-l-sprint-teal; }
+  .card-bordered-orange{ @apply card border-l-4 border-l-sprint-orange; }
+  .card-bordered-green { @apply card border-l-4 border-l-sprint-green; }
+  .card-bordered-purple{ @apply card border-l-4 border-l-sprint-purple; }
+
+  /* ---------- Inputs ---------- */
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 outline-none;
+    @apply w-full rounded-lg bg-navy-800 border border-white/10 px-3 py-2.5
+           text-slate-100 placeholder:text-slate-500
+           focus:border-sprint-teal focus:ring-2 focus:ring-sprint-teal/30 outline-none;
+  }
+
+  /* ---------- Marketing chrome ---------- */
+  .section { @apply py-16 md:py-24; }
+  .section-eyebrow {
+    @apply text-sprint-teal text-xs font-bold tracking-[0.25em] uppercase;
+  }
+  .section-title {
+    @apply font-display text-4xl md:text-6xl text-white leading-none;
+  }
+  .stat-number {
+    @apply font-display text-5xl md:text-7xl text-sprint-orange leading-none;
+  }
+  .stat-label {
+    @apply text-slate-300 text-sm md:text-base mt-2 max-w-xs;
+  }
+  .ribbon {
+    @apply absolute left-0 top-0 h-full w-1.5;
   }
 }
