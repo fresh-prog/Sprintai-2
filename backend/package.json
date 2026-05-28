@@ -37,6 +37,7 @@
   "devDependencies": {
     "eslint": "^9.10.0",
     "nodemon": "^3.1.4",
+    "pino-pretty": "^11.2.2",
     "prisma": "^5.20.0",
     "supertest": "^7.0.0",
     "vitest": "^2.1.1"
