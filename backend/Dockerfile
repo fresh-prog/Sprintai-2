@@ -1,12 +1,18 @@
 # syntax=docker/dockerfile:1.6
 # Multi-stage build. Target `dev` for hot-reload, `production` for prod.
+#
+# We use debian-slim instead of alpine because Prisma's schema engine has
+# long-standing libssl detection problems on alpine/musl. Bookworm ships
+# OpenSSL 3 and Prisma's prebuilt binaries Just Work.
 
 # ---------- base ----------
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
-RUN apk add --no-cache tini openssl \
- && addgroup -S app && adduser -S app -G app
-ENTRYPOINT ["/sbin/tini", "--"]
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tini openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd -r app && useradd -r -g app app
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # ---------- deps ----------
 FROM base AS deps
