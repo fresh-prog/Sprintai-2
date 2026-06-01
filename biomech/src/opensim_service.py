@@ -23,6 +23,7 @@ from .sprint import analyze_sprint
 from .video import extract_frames
 from .ml_endpoints import athlete_similarity, injury_risk, predict_100m_time
 from .technique import detect_errors
+from .coach import build_report as build_coach_report
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -193,6 +194,26 @@ def technique_errors(batch: FrameBatch) -> dict[str, Any]:
     arm cross-body, excessive trunk lean. Heuristic + explainable."""
     frames = [f.model_dump() for f in batch.frames]
     return detect_errors(frames)
+
+
+class CoachReportRequest(BaseModel):
+    metrics: dict
+    sprint_score: float
+    predicted_100m_s: float | None = None
+    faults_counts: dict | None = None
+
+
+@app.post("/coach-report")
+def coach_report(req: CoachReportRequest) -> dict[str, Any]:
+    """One-shot coach report: athlete tier + peak-sprinter comparison table +
+    prioritized recommendations. Consumed by the backend to render the
+    coach-facing hero panel on every session."""
+    return build_coach_report(
+        metrics=req.metrics,
+        sprint_score=req.sprint_score,
+        predicted_100m_s=req.predicted_100m_s,
+        faults_counts=req.faults_counts,
+    )
 
 
 @app.post("/ik/run")

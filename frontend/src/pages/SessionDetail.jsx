@@ -10,6 +10,7 @@ import PhaseTimeline from '../components/PhaseTimeline.jsx';
 import InsightsPanel from '../components/InsightsPanel.jsx';
 import FaultsPanel from '../components/FaultsPanel.jsx';
 import EliteFan from '../components/EliteFan.jsx';
+import CoachReport from '../components/CoachReport.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
@@ -108,6 +109,7 @@ export default function SessionDetail() {
       {summary.session.status === 'PROCESSING' && <ProcessingBanner />}
       {summary.session.status === 'FAILED' && <FailedBanner meta={summary.session.meta} />}
 
+      {hasSprint && <CoachReport sessionId={id} />}
       {hasSprint && <SprintScorecard sprint={sprint} />}
       {hasSprint && <InsightsPanel sessionId={id} />}
       {hasSprint && (

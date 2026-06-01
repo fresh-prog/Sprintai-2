@@ -10,5 +10,6 @@ r.use(requireAuth);
 r.get('/sessions/:id/predict-time', validate({ params: idParam }), ctrl.predictTime);
 r.get('/sessions/:id/injury-risk',  validate({ params: idParam }), ctrl.injuryRisk);
 r.get('/sessions/:id/similar',      validate({ params: idParam }), ctrl.similar);
+r.get('/sessions/:id/coach-report', validate({ params: idParam }), ctrl.coachReport);
 
 export default r;
