@@ -8,8 +8,10 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Capture from './pages/Capture.jsx';
+import Upload from './pages/Upload.jsx';
 import Sessions from './pages/Sessions.jsx';
 import SessionDetail from './pages/SessionDetail.jsx';
+import Athletes from './pages/Athletes.jsx';
 import Admin from './pages/Admin.jsx';
 
 function Protected({ children, admin = false }) {
@@ -42,6 +44,8 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/capture" element={<Protected><Capture /></Protected>} />
+            <Route path="/upload" element={<Protected><Upload /></Protected>} />
+            <Route path="/athletes" element={<Protected><Athletes /></Protected>} />
             <Route path="/sessions" element={<Protected><Sessions /></Protected>} />
             <Route path="/sessions/:id" element={<Protected><SessionDetail /></Protected>} />
             <Route path="/admin" element={<Protected admin><Admin /></Protected>} />

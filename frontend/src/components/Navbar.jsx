@@ -25,8 +25,10 @@ export default function Navbar() {
           {user ? (
             <>
               <NavLink to="/dashboard" className={linkClass}>Dashboard</NavLink>
-              <NavLink to="/capture" className={linkClass}>Capture</NavLink>
-              <NavLink to="/sessions" className={linkClass}>Sessions</NavLink>
+              <NavLink to="/capture"   className={linkClass}>Capture</NavLink>
+              <NavLink to="/upload"    className={linkClass}>Upload</NavLink>
+              <NavLink to="/sessions"  className={linkClass}>Sessions</NavLink>
+              <NavLink to="/athletes"  className={linkClass}>Athletes</NavLink>
               {user.role === 'ADMIN' && <NavLink to="/admin" className={linkClass}>Admin</NavLink>}
               <span className="text-sm text-slate-400 ml-3 hidden sm:inline">
                 {user.displayName}

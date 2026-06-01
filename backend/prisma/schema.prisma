@@ -14,6 +14,9 @@ datasource db {
 
 enum Role {
   USER
+  ATHLETE
+  COACH
+  RESEARCHER
   ADMIN
 }
 
@@ -24,6 +27,7 @@ enum SessionSource {
 
 enum SessionStatus {
   ACTIVE
+  PROCESSING
   COMPLETED
   FAILED
 }
@@ -33,6 +37,17 @@ enum PredictionKind {
   ACTIVITY
   INJURY_RISK
   FORM
+  SPRINT_PHASE
+  TECHNIQUE_ERROR
+  PERFORMANCE
+}
+
+enum SprintEvent {
+  S100M
+  S200M
+  S400M
+  RELAY
+  PRACTICE
 }
 
 model User {
@@ -44,8 +59,38 @@ model User {
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz()
   sessions      Session[]
   refreshTokens RefreshToken[]
+  // Coaches own a roster of athletes. An athlete is also a User in their
+  // own right (they can log in), but their performance record lives in
+  // Athlete so the coach has a canonical place to attach goals + notes.
+  coachedAthletes Athlete[] @relation("CoachedBy")
+  athleteProfile  Athlete?  @relation("AthleteUser")
 
   @@map("user")
+}
+
+model Athlete {
+  id          String       @id @default(uuid()) @db.Uuid
+  // Optional link to the User account that "is" this athlete. Self-coached
+  // athletes set it to their own user id; coach-managed athletes leave it
+  // null until the athlete signs up.
+  userId      String?      @unique @map("user_id") @db.Uuid
+  coachId     String?      @map("coach_id") @db.Uuid
+  fullName    String       @map("full_name")
+  dateOfBirth DateTime?    @map("date_of_birth") @db.Date
+  sex         String?      // "M" | "F" | "X" — left as free string for inclusivity
+  heightCm    Float?       @map("height_cm")
+  weightKg    Float?       @map("weight_kg")
+  country     String?      // ISO 3166-1 alpha-2 (e.g. "UG" for Uganda)
+  primaryEvent SprintEvent @default(S100M) @map("primary_event")
+  notes       String?
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+  user        User?        @relation("AthleteUser", fields: [userId], references: [id], onDelete: SetNull)
+  coach       User?        @relation("CoachedBy", fields: [coachId], references: [id], onDelete: SetNull)
+  sessions    Session[]
+
+  @@index([coachId])
+  @@index([country])
+  @@map("athlete")
 }
 
 model RefreshToken {
@@ -64,6 +109,11 @@ model RefreshToken {
 model Session {
   id          String         @id @default(uuid()) @db.Uuid
   userId      String         @map("user_id") @db.Uuid
+  // The session is "for" an athlete — defaults to the owner's own
+  // athleteProfile when omitted (self-coached flow). Coaches set it
+  // explicitly when uploading on behalf of someone on their roster.
+  athleteId   String?        @map("athlete_id") @db.Uuid
+  event       SprintEvent    @default(PRACTICE)
   label       String
   source      SessionSource
   status      SessionStatus  @default(ACTIVE)
@@ -71,12 +121,14 @@ model Session {
   endedAt     DateTime?      @map("ended_at") @db.Timestamptz()
   meta        Json           @default("{}")
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  athlete     Athlete?       @relation(fields: [athleteId], references: [id], onDelete: SetNull)
   videoAsset  VideoAsset?
   poseFrames  PoseFrame[]
   metrics     Metric[]
   predictions Prediction[]
 
   @@index([userId, startedAt(sort: Desc)])
+  @@index([athleteId, startedAt(sort: Desc)])
   @@map("session")
 }
 

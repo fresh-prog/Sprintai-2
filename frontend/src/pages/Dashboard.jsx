@@ -27,20 +27,27 @@ export default function Dashboard() {
         </p>
       </header>
 
-      <section className="grid md:grid-cols-3 gap-5">
+      <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
         <ActionCard
           to="/capture"
-          eyebrow="01 · Record"
-          title="Live capture"
-          body="Film a 40m run from any webcam. We extract 33 body landmarks per frame in real time."
+          eyebrow="01 · Record live"
+          title="Webcam capture"
+          body="Stream from any webcam — 33 body landmarks per frame, real-time scoring."
           accent="teal"
         />
         <ActionCard
-          to="/sessions"
-          eyebrow="02 · Analyze"
-          title="My sessions"
-          body="Review past sprints, stride mechanics, range of motion, and symmetry metrics."
+          to="/upload"
+          eyebrow="02 · Upload"
+          title="Sprint video"
+          body="Drop a 100m or 200m MP4. Returns stride mechanics, phase timeline, and a sprint score."
           accent="orange"
+        />
+        <ActionCard
+          to="/athletes"
+          eyebrow="03 · Roster"
+          title="Athletes"
+          body="Coach view of every athlete on your roster — primary event, stats, history."
+          accent="coral"
         />
         <div className="card-stat min-h-[200px]">
           <div className="stat-number">{recent.length}</div>

@@ -19,6 +19,7 @@ from .gait import cadence_from_frames
 from .geometry import frame_angles, range_of_motion, robinson_symmetry
 from .ik import run_ik
 from .reps import count as count_reps
+from .sprint import analyze_sprint
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -120,6 +121,19 @@ def reps(req: RepsRequest) -> dict[str, Any]:
     if req.exercise not in ("squat", "pushup"):
         raise HTTPException(status_code=400, detail=f"unsupported exercise: {req.exercise}")
     return count_reps(frames, exercise=req.exercise)
+
+
+class SprintRequest(FrameBatch):
+    athleteHeightCm: float | None = None
+
+
+@app.post("/sprint")
+def sprint(req: SprintRequest) -> dict[str, Any]:
+    """End-to-end sprint analysis: stride mechanics, GCT, phase timeline,
+    composite technique + sprint scores. Designed for the backend to call
+    once per completed session."""
+    frames = [f.model_dump() for f in req.frames]
+    return analyze_sprint(frames, athlete_height_cm=req.athleteHeightCm)
 
 
 @app.post("/ik/run")

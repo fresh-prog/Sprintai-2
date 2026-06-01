@@ -24,4 +24,8 @@ export const biomechClient = {
   computeGait: (frames) => safeCall('/gait', { frames }),
   computeRom: (frames) => safeCall('/rom', { frames }),
   computeSummary: (frames) => safeCall('/summary', { frames }),
+  // Sprint-specific endpoint. `athleteHeightCm` is optional and only used
+  // to scale normalized metrics into real-world units when present.
+  analyzeSprint: (frames, athleteHeightCm) =>
+    safeCall('/sprint', { frames, athleteHeightCm }),
 };

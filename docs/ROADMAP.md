@@ -113,3 +113,44 @@ a manual measurement.
 - Federated training across instances
 - [x] Rep counting + exercise-specific form rubrics (squat + push-up; biomech `/reps` endpoint)
 - [x] Physio-grade reports (PDF via pdfkit at `GET /sessions/:id/report.pdf`)
+
+---
+
+## Sprint AI v2 (the talent-identification platform)
+
+Tracks the deck — see [`SPRINT_AI_V2.md`](SPRINT_AI_V2.md) for the full
+architecture and [`RESEARCH_METHODOLOGY.md`](RESEARCH_METHODOLOGY.md) for the
+Ugandan-cohort study.
+
+### Phase 7 — Sprint-specific analysis (this commit)
+
+- [x] Multi-role data model: `ATHLETE | COACH | RESEARCHER | ADMIN`
+- [x] `Athlete` table linked to `User` (self) and `User` (coach)
+- [x] `Session.athleteId` + `Session.event` (S100M / S200M / S400M / RELAY / PRACTICE)
+- [x] Biomech `/sprint` endpoint — stride length / freq, GCT, trunk lean,
+      knee drive, arm swing, velocity, phase timeline, **sprint score (0–100)**
+- [x] Backend finalizer persists `sprint.*` metrics + `SPRINT_PHASE` predictions
+- [x] Athletes page + CRUD (`/api/v1/athletes`)
+- [x] Drag-drop video upload page (MP4 / MOV / AVI / MKV / WebM, ≤ 200 MB)
+- [x] 3D athlete viewer (`@react-three/fiber`) — rotatable skeleton + hip trail
+- [x] Sprint scorecard (two SVG score rings + 6 benchmarked sub-metrics)
+- [x] Phase timeline (stacked horizontal bar, deck colors)
+- [x] Research methodology doc — Ugandan cohort, IRB, consent, capture protocol
+
+### Phase 8 — ML upgrades
+
+- [ ] Server-side video → MediaPipe Pose worker (Python) for uploaded clips
+- [ ] TCN phase classifier (replaces heuristic phase timeline)
+- [ ] Athlete similarity model (k-NN on technique vectors)
+- [ ] Performance prediction (race time from form features)
+- [ ] Injury-risk classifier (asymmetry + GCT outliers)
+- [ ] Technique error detection (per-frame fault tags)
+
+### Phase 9 — Visualization & connection
+
+- [ ] Global Talent Map (Leaflet world view of anonymized scores)
+- [ ] D3 elite-fan comparison chart (athlete vs elite distribution)
+- [ ] Chart.js performance-over-time per athlete
+- [ ] Coach roster bulk-upload (CSV)
+- [ ] Research consent flow + cohort export endpoint
+- [ ] Mobile-first capture UI (works on a phone browser)

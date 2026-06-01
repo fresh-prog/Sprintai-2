@@ -27,10 +27,14 @@ export async function predictions(req, res) {
 
 export async function summary(req, res) {
   const session = await svc.getSession(req.user.id, req.params.id);
-  const [metricAgg, topPred, frameCount, summaryRows] = await Promise.all([
+  const managed = ['summary.', 'sprint.'];
+  const [metricAgg, topPred, frameCount, summaryRows, sprintRows, phaseRows] = await Promise.all([
     prisma.metric.groupBy({
       by: ['name'],
-      where: { sessionId: session.id, name: { not: { startsWith: 'summary.' } } },
+      where: {
+        sessionId: session.id,
+        AND: managed.map((p) => ({ name: { not: { startsWith: p } } })),
+      },
       _max: { value: true },
       _min: { value: true },
       _avg: { value: true },
@@ -47,9 +51,16 @@ export async function summary(req, res) {
       where: { sessionId: session.id, name: { startsWith: 'summary.' } },
       orderBy: { name: 'asc' },
     }),
+    prisma.metric.findMany({
+      where: { sessionId: session.id, name: { startsWith: 'sprint.' } },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.prediction.findMany({
+      where: { sessionId: session.id, kind: 'SPRINT_PHASE' },
+      orderBy: { tsMs: 'asc' },
+    }),
   ]);
 
-  // Pivot summary.* rows into a structured object.
   const biomech = { rom: {}, symmetry: {}, gait: {} };
   for (const row of summaryRows) {
     const [, group, ...rest] = row.name.split('.');
@@ -57,7 +68,18 @@ export async function summary(req, res) {
     if (group in biomech) biomech[group][key] = row.value;
   }
 
-  res.json({ session, metricAgg, topPred, frameCount, biomech });
+  const sprint = {};
+  for (const row of sprintRows) {
+    sprint[row.name.slice('sprint.'.length)] = row.value;
+  }
+  const phases = phaseRows.map((p) => ({
+    phase: p.label,
+    startMs: p.tsMs,
+    endMs:   p.meta?.endMs   ?? p.tsMs,
+    durationMs: p.meta?.durationMs ?? 0,
+  }));
+
+  res.json({ session, metricAgg, topPred, frameCount, biomech, sprint, phases });
 }
 
 export async function adminOverview(_req, res) {

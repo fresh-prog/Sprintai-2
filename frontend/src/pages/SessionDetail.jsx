@@ -4,6 +4,9 @@ import api, { downloadAuthed } from '../services/api.js';
 import AngleChart from '../components/AngleChart.jsx';
 import MovementMap from '../components/MovementMap.jsx';
 import SkeletonReplay from '../components/SkeletonReplay.jsx';
+import Athlete3D from '../components/Athlete3D.jsx';
+import SprintScorecard from '../components/SprintScorecard.jsx';
+import PhaseTimeline from '../components/PhaseTimeline.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
@@ -23,7 +26,6 @@ export default function SessionDetail() {
     });
   }, [id]);
 
-  // Pivot metrics by name → time series the chart wants.
   const series = useMemo(() => {
     const byTs = new Map();
     for (const m of metrics) {
@@ -33,7 +35,6 @@ export default function SessionDetail() {
     return [...byTs.values()].sort((a, b) => a.tsMs - b.tsMs);
   }, [metrics]);
 
-  // Hip-center trajectory for the movement map.
   const trajectory = useMemo(() => {
     return frames
       .map((f) => {
@@ -45,86 +46,95 @@ export default function SessionDetail() {
       .filter(Boolean);
   }, [frames]);
 
-  if (!summary) return <p>Loading…</p>;
+  if (!summary) return <p className="text-slate-300">Loading…</p>;
 
   const biomech = summary.biomech ?? { rom: {}, symmetry: {}, gait: {} };
+  const sprint = summary.sprint ?? {};
+  const phases = summary.phases ?? [];
   const cadence = biomech.gait?.cadence_spm;
-  const hasSummary = Object.keys(biomech.rom).length > 0
+  const hasBiomech = Object.keys(biomech.rom).length > 0
                      || Object.keys(biomech.symmetry).length > 0
                      || cadence != null;
+  const hasSprint = Object.keys(sprint).length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{summary.session.label}</h1>
-          <p className="text-slate-500 text-sm">
+          <p className="section-eyebrow">{summary.session.event ?? 'Session'}</p>
+          <h1 className="font-display text-4xl text-white mt-1">{summary.session.label}</h1>
+          <p className="text-slate-400 text-sm mt-1">
             {new Date(summary.session.startedAt).toLocaleString()} · {summary.frameCount} frames
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="btn-secondary text-sm"
-            onClick={() => downloadAuthed(`/sessions/${id}/export?format=json`, `session-${id}.json`)}
-          >
-            Export JSON
+        <div className="flex gap-2 flex-wrap">
+          <button className="btn-secondary text-sm"
+                  onClick={() => downloadAuthed(`/sessions/${id}/export?format=json`, `session-${id}.json`)}>
+            JSON
           </button>
-          <button
-            type="button"
-            className="btn-secondary text-sm"
-            onClick={() => downloadAuthed(`/sessions/${id}/export?format=csv`, `session-${id}-metrics.csv`)}
-          >
-            Export CSV
+          <button className="btn-secondary text-sm"
+                  onClick={() => downloadAuthed(`/sessions/${id}/export?format=csv`, `session-${id}-metrics.csv`)}>
+            CSV
           </button>
-          <button
-            type="button"
-            className="btn-primary text-sm"
-            onClick={() => downloadAuthed(`/sessions/${id}/report.pdf`, `session-${id}-report.pdf`)}
-          >
+          <button className="btn-primary text-sm"
+                  onClick={() => downloadAuthed(`/sessions/${id}/report.pdf`, `session-${id}-report.pdf`)}>
             PDF report
           </button>
         </div>
       </header>
 
-      {hasSummary && (
+      {hasSprint && <SprintScorecard sprint={sprint} />}
+
+      {phases.length > 0 && (
+        <section>
+          <h2 className="font-display text-2xl text-white mb-3 tracking-wider">SPRINT PHASES</h2>
+          <PhaseTimeline phases={phases} />
+        </section>
+      )}
+
+      <section>
+        <h2 className="font-display text-2xl text-white mb-3 tracking-wider">3D ATHLETE</h2>
+        <Athlete3D frames={frames} />
+      </section>
+
+      {hasBiomech && (
         <section className="grid sm:grid-cols-3 gap-4">
           {Object.entries(biomech.rom).map(([joint, range]) => (
             <div className="card" key={`rom-${joint}`}>
-              <p className="text-sm text-slate-500">ROM · {joint}</p>
-              <p className="text-2xl font-bold">{range.toFixed(0)}°</p>
+              <p className="text-sm text-slate-400">ROM · {joint}</p>
+              <p className="font-display text-3xl text-sprint-orange mt-1">{range.toFixed(0)}°</p>
             </div>
           ))}
           {Object.entries(biomech.symmetry).map(([pair, idx]) => (
             <div className="card" key={`sym-${pair}`}>
-              <p className="text-sm text-slate-500">Symmetry · {pair}</p>
-              <p className="text-2xl font-bold">{idx.toFixed(1)}%</p>
+              <p className="text-sm text-slate-400">Symmetry · {pair}</p>
+              <p className="font-display text-3xl text-sprint-teal mt-1">{idx.toFixed(1)}%</p>
               <p className="text-xs text-slate-500">lower is better</p>
             </div>
           ))}
           {cadence != null && (
             <div className="card">
-              <p className="text-sm text-slate-500">Cadence</p>
-              <p className="text-2xl font-bold">{cadence.toFixed(0)} spm</p>
+              <p className="text-sm text-slate-400">Cadence</p>
+              <p className="font-display text-3xl text-sprint-orange mt-1">{cadence.toFixed(0)} <span className="text-base text-slate-400">spm</span></p>
             </div>
           )}
         </section>
       )}
 
       <div className="grid md:grid-cols-2 gap-4">
-        <AngleChart data={series} dataKey="left_knee"  label="Left knee angle"  color="#2563eb" />
-        <AngleChart data={series} dataKey="right_knee" label="Right knee angle" color="#16a34a" />
-        <AngleChart data={series} dataKey="left_hip"   label="Left hip angle"   color="#d97706" />
-        <AngleChart data={series} dataKey="right_hip"  label="Right hip angle"  color="#dc2626" />
+        <AngleChart data={series} dataKey="left_knee"  label="Left knee angle"  color="#1ec5c5" />
+        <AngleChart data={series} dataKey="right_knee" label="Right knee angle" color="#f5a623" />
+        <AngleChart data={series} dataKey="left_hip"   label="Left hip angle"   color="#22c55e" />
+        <AngleChart data={series} dataKey="right_hip"  label="Right hip angle"  color="#ef4444" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <section>
-          <h2 className="text-xl font-semibold mb-2">Skeleton replay</h2>
+          <h2 className="font-display text-2xl text-white mb-3 tracking-wider">SKELETON REPLAY</h2>
           <SkeletonReplay frames={frames} />
         </section>
         <section>
-          <h2 className="text-xl font-semibold mb-2">Movement map (hip center)</h2>
+          <h2 className="font-display text-2xl text-white mb-3 tracking-wider">MOVEMENT MAP</h2>
           <MovementMap points={trajectory} />
         </section>
       </div>

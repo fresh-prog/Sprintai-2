@@ -2,6 +2,10 @@
 
 PostgreSQL 16, managed via Prisma (`backend/prisma/schema.prisma`).
 
+Sprint AI v2 adds the `Athlete` table and the `Athlete ↔ Session` link.
+See [`SPRINT_AI_V2.md`](SPRINT_AI_V2.md) §3 for the rationale and the
+metric-naming convention (`summary.*` vs `sprint.*`).
+
 ## ER diagram
 
 ```mermaid

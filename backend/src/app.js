@@ -17,6 +17,7 @@ import { httpDurationMiddleware, metricsHandler } from './observability/metrics.
 import authRoutes from './routes/auth.routes.js';
 import sessionRoutes from './routes/session.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import athleteRoutes from './routes/athlete.routes.js';
 
 export function buildApp() {
   const app = express();
@@ -43,6 +44,7 @@ export function buildApp() {
 
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/sessions', sessionRoutes);
+  app.use('/api/v1/athletes', athleteRoutes);
   app.use('/api/v1', analyticsRoutes);
 
   app.use(notFound);
