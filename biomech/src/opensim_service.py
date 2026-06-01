@@ -20,6 +20,8 @@ from .geometry import frame_angles, range_of_motion, robinson_symmetry
 from .ik import run_ik
 from .reps import count as count_reps
 from .sprint import analyze_sprint
+from .video import extract_frames
+from .ml_endpoints import athlete_similarity, injury_risk, predict_100m_time
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -134,6 +136,54 @@ def sprint(req: SprintRequest) -> dict[str, Any]:
     once per completed session."""
     frames = [f.model_dump() for f in req.frames]
     return analyze_sprint(frames, athlete_height_cm=req.athleteHeightCm)
+
+
+class ExtractRequest(BaseModel):
+    videoPath: str            # absolute path inside the container
+    stride: int = 2           # take every Nth frame
+    maxFrames: int = 6000
+
+
+@app.post("/extract")
+def extract(req: ExtractRequest) -> dict[str, Any]:
+    """Run MediaPipe Pose over an uploaded video file and return pose frames.
+
+    The backend mounts the same `uploads` volume into both itself and this
+    biomech container, so the path the backend hands us is directly readable.
+    """
+    return extract_frames(req.videoPath, stride=req.stride, max_frames=req.maxFrames)
+
+
+# ---------------------------------------------------------------------- ML --
+
+class SimilarityRequest(BaseModel):
+    subject: dict
+    cohort: list[dict]
+    k: int = 5
+
+
+@app.post("/ml/similarity")
+def ml_similarity(req: SimilarityRequest) -> dict[str, Any]:
+    return athlete_similarity(req.subject, req.cohort, k=req.k)
+
+
+class InjuryRiskRequest(BaseModel):
+    metrics: dict
+    symmetry: dict | None = None
+
+
+@app.post("/ml/injury-risk")
+def ml_injury_risk(req: InjuryRiskRequest) -> dict[str, Any]:
+    return injury_risk(req.metrics, symmetry=req.symmetry)
+
+
+class PredictTimeRequest(BaseModel):
+    metrics: dict
+
+
+@app.post("/ml/predict-time")
+def ml_predict_time(req: PredictTimeRequest) -> dict[str, Any]:
+    return predict_100m_time(req.metrics)
 
 
 @app.post("/ik/run")

@@ -1,6 +1,8 @@
 import * as svc from '../services/session.service.js';
 import * as pose from '../services/pose.service.js';
 import { saveVideo } from '../services/upload.service.js';
+import { processUploadedVideo } from '../services/videoProcessor.service.js';
+import { logger } from '../config/logger.js';
 import { prisma } from '../config/db.js';
 
 export async function create(req, res) {
@@ -45,5 +47,17 @@ export async function getFrames(req, res) {
 export async function uploadVideo(req, res) {
   await svc.getSession(req.user.id, req.params.id);
   const asset = await saveVideo(req.params.id, req.file);
-  res.status(201).json({ videoAssetId: asset.id, sessionId: req.params.id });
+
+  // Fire-and-forget pipeline: extract pose frames, then run sprint analysis.
+  // The HTTP response goes out as soon as the file is on disk; the session
+  // status transitions PROCESSING → COMPLETED in the background.
+  processUploadedVideo(req.params.id, asset.storagePath).catch((err) => {
+    logger.error({ err: err.message, sessionId: req.params.id }, 'background processing crashed');
+  });
+
+  res.status(201).json({
+    videoAssetId: asset.id,
+    sessionId: req.params.id,
+    status: 'PROCESSING',
+  });
 }

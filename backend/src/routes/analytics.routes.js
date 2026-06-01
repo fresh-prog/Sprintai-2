@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/analytics.controller.js';
 import * as exp from '../controllers/export.controller.js';
+import * as map from '../controllers/talentmap.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { idParam } from '../validators/session.validator.js';
@@ -15,5 +16,6 @@ r.get('/sessions/:id/export',      validate({ params: idParam }), exp.exportSess
 r.get('/sessions/:id/report.pdf',  validate({ params: idParam }), exp.exportReport);
 
 r.get('/admin/overview', requireRole('ADMIN'), ctrl.adminOverview);
+r.get('/talent-map', map.aggregate);
 
 export default r;

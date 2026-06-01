@@ -24,11 +24,12 @@ export default function Navbar() {
         <nav className="flex items-center gap-1.5">
           {user ? (
             <>
-              <NavLink to="/dashboard" className={linkClass}>Dashboard</NavLink>
-              <NavLink to="/capture"   className={linkClass}>Capture</NavLink>
-              <NavLink to="/upload"    className={linkClass}>Upload</NavLink>
-              <NavLink to="/sessions"  className={linkClass}>Sessions</NavLink>
-              <NavLink to="/athletes"  className={linkClass}>Athletes</NavLink>
+              <NavLink to="/dashboard"  className={linkClass}>Dashboard</NavLink>
+              <NavLink to="/capture"    className={linkClass}>Capture</NavLink>
+              <NavLink to="/upload"     className={linkClass}>Upload</NavLink>
+              <NavLink to="/sessions"   className={linkClass}>Sessions</NavLink>
+              <NavLink to="/athletes"   className={linkClass}>Athletes</NavLink>
+              <NavLink to="/talent-map" className={linkClass}>Map</NavLink>
               {user.role === 'ADMIN' && <NavLink to="/admin" className={linkClass}>Admin</NavLink>}
               <span className="text-sm text-slate-400 ml-3 hidden sm:inline">
                 {user.displayName}

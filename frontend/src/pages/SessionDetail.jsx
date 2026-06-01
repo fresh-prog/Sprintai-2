@@ -7,6 +7,7 @@ import SkeletonReplay from '../components/SkeletonReplay.jsx';
 import Athlete3D from '../components/Athlete3D.jsx';
 import SprintScorecard from '../components/SprintScorecard.jsx';
 import PhaseTimeline from '../components/PhaseTimeline.jsx';
+import InsightsPanel from '../components/InsightsPanel.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
@@ -15,15 +16,34 @@ export default function SessionDetail() {
   const [frames, setFrames] = useState([]);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/sessions/${id}/summary`),
-      api.get(`/sessions/${id}/metrics`),
-      api.get(`/sessions/${id}/frames`),
-    ]).then(([s, m, f]) => {
+    let cancelled = false;
+    async function load() {
+      const [s, m, f] = await Promise.all([
+        api.get(`/sessions/${id}/summary`),
+        api.get(`/sessions/${id}/metrics`),
+        api.get(`/sessions/${id}/frames`),
+      ]);
+      if (cancelled) return;
       setSummary(s.data);
       setMetrics(m.data.metrics ?? []);
       setFrames(f.data.frames ?? []);
-    });
+    }
+    load();
+
+    // Poll every 3s while the session is still PROCESSING — covers the
+    // upload-pipeline path where frame extraction is in flight.
+    const tick = setInterval(async () => {
+      try {
+        const { data } = await api.get(`/sessions/${id}/summary`);
+        if (cancelled) return;
+        if (data.session?.status !== 'PROCESSING') {
+          await load();
+          clearInterval(tick);
+        }
+      } catch { /* network blip — try again next tick */ }
+    }, 3000);
+
+    return () => { cancelled = true; clearInterval(tick); };
   }, [id]);
 
   const series = useMemo(() => {
@@ -83,7 +103,11 @@ export default function SessionDetail() {
         </div>
       </header>
 
+      {summary.session.status === 'PROCESSING' && <ProcessingBanner />}
+      {summary.session.status === 'FAILED' && <FailedBanner meta={summary.session.meta} />}
+
       {hasSprint && <SprintScorecard sprint={sprint} />}
+      {hasSprint && <InsightsPanel sessionId={id} />}
 
       {phases.length > 0 && (
         <section>
@@ -138,6 +162,36 @@ export default function SessionDetail() {
           <MovementMap points={trajectory} />
         </section>
       </div>
+    </div>
+  );
+}
+
+function ProcessingBanner() {
+  return (
+    <div className="card border-l-4 border-l-sprint-orange flex items-center gap-4">
+      <div className="w-3 h-3 rounded-full bg-sprint-orange animate-pulse" />
+      <div>
+        <p className="font-display text-xl text-white">Analyzing video…</p>
+        <p className="text-slate-400 text-sm">
+          Extracting pose frames and running sprint analysis. This usually takes 10–40 seconds
+          depending on video length. The page will refresh automatically.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function FailedBanner({ meta }) {
+  return (
+    <div className="card border-l-4 border-l-sprint-coral">
+      <p className="font-display text-xl text-white">Analysis failed</p>
+      <p className="text-slate-400 text-sm mt-1">
+        {meta?.error ?? meta?.reason ?? 'Unknown error during processing.'}
+      </p>
+      <p className="text-slate-500 text-xs mt-3">
+        Common causes: athlete not visible in frame, video too short (&lt; 1 s),
+        unsupported codec. Try a side-view clip with the full body visible.
+      </p>
     </div>
   );
 }

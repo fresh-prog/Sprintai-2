@@ -45,6 +45,9 @@ services:
     volumes:
       - ./biomech:/app
       - biomech-output:/app/output
+      # Read-only mount of the backend's uploads. Lets `/extract` open the
+      # video files the backend just wrote without a multipart hop.
+      - uploads:/app/uploads:ro
 
   backend:
     build:

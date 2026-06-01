@@ -139,18 +139,19 @@ Ugandan-cohort study.
 
 ### Phase 8 — ML upgrades
 
-- [ ] Server-side video → MediaPipe Pose worker (Python) for uploaded clips
+- [x] Server-side video → MediaPipe Pose worker (Python) for uploaded clips
+- [x] Athlete similarity model (k-NN on normalized 6-feature technique vector)
+- [x] Performance prediction (linear model → 100m time + confidence band)
+- [x] Injury-risk classifier (rule-based: asymmetry, GCT outliers, knee drive, trunk lean)
 - [ ] TCN phase classifier (replaces heuristic phase timeline)
-- [ ] Athlete similarity model (k-NN on technique vectors)
-- [ ] Performance prediction (race time from form features)
-- [ ] Injury-risk classifier (asymmetry + GCT outliers)
 - [ ] Technique error detection (per-frame fault tags)
 
 ### Phase 9 — Visualization & connection
 
-- [ ] Global Talent Map (Leaflet world view of anonymized scores)
+- [x] Global Talent Map (Leaflet world view of anonymized scores by country)
+- [x] Chart.js performance-over-time per athlete (`AthleteTrendline`)
+- [x] Insights panel on session detail (predicted time / injury risk / similar athletes)
 - [ ] D3 elite-fan comparison chart (athlete vs elite distribution)
-- [ ] Chart.js performance-over-time per athlete
 - [ ] Coach roster bulk-upload (CSV)
 - [ ] Research consent flow + cohort export endpoint
 - [ ] Mobile-first capture UI (works on a phone browser)
