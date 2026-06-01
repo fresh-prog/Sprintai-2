@@ -28,7 +28,7 @@ export async function predictions(req, res) {
 export async function summary(req, res) {
   const session = await svc.getSession(req.user.id, req.params.id);
   const managed = ['summary.', 'sprint.'];
-  const [metricAgg, topPred, frameCount, summaryRows, sprintRows, phaseRows] = await Promise.all([
+  const [metricAgg, topPred, frameCount, summaryRows, sprintRows, phaseRows, faultRows] = await Promise.all([
     prisma.metric.groupBy({
       by: ['name'],
       where: {
@@ -59,6 +59,11 @@ export async function summary(req, res) {
       where: { sessionId: session.id, kind: 'SPRINT_PHASE' },
       orderBy: { tsMs: 'asc' },
     }),
+    prisma.prediction.findMany({
+      where: { sessionId: session.id, kind: 'TECHNIQUE_ERROR' },
+      orderBy: { tsMs: 'asc' },
+      take: 1000,
+    }),
   ]);
 
   const biomech = { rom: {}, symmetry: {}, gait: {} };
@@ -79,7 +84,16 @@ export async function summary(req, res) {
     durationMs: p.meta?.durationMs ?? 0,
   }));
 
-  res.json({ session, metricAgg, topPred, frameCount, biomech, sprint, phases });
+  const faults = {
+    counts: {},
+    samples: faultRows.slice(0, 50).map((p) => ({
+      tsMs: p.tsMs, tag: p.label,
+      joint: p.meta?.joint, severity: p.meta?.severity, message: p.meta?.message,
+    })),
+  };
+  for (const f of faultRows) faults.counts[f.label] = (faults.counts[f.label] || 0) + 1;
+
+  res.json({ session, metricAgg, topPred, frameCount, biomech, sprint, phases, faults });
 }
 
 export async function adminOverview(_req, res) {

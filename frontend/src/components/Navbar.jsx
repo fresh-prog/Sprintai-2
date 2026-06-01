@@ -13,15 +13,15 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-navy-900/80 backdrop-blur">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
-        <Link to="/" className="flex items-center gap-2 group">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 px-4 sm:px-6 py-3">
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
           <Logo />
           <span className="font-display text-2xl tracking-wider text-white group-hover:text-sprint-orange transition">
             SPRINT AI
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1.5">
+        <nav className="flex flex-wrap items-center gap-1.5 justify-end">
           {user ? (
             <>
               <NavLink to="/dashboard"  className={linkClass}>Dashboard</NavLink>

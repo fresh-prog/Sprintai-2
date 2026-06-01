@@ -44,9 +44,12 @@ export default function Athletes() {
           </p>
         </div>
         {canAdd && (
-          <button className="btn-primary text-sm" onClick={() => setShowNew(true)}>
-            + Add athlete
-          </button>
+          <div className="flex gap-2">
+            <BulkUploadButton onUploaded={load} />
+            <button className="btn-primary text-sm" onClick={() => setShowNew(true)}>
+              + Add athlete
+            </button>
+          </div>
         )}
       </header>
 
@@ -173,6 +176,78 @@ function NewAthleteModal({ onClose, onSaved }) {
         </form>
       </div>
     </div>
+  );
+}
+
+function BulkUploadButton({ onUploaded }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+
+  async function onFile(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setBusy(true); setResult(null);
+    try {
+      const form = new FormData();
+      form.append('csv', f);
+      const { data } = await api.post('/athletes/bulk', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setResult(data);
+      onUploaded?.();
+    } catch (err) {
+      setResult({ error: err.response?.data?.error?.message ?? err.message });
+    } finally {
+      setBusy(false);
+      e.target.value = '';
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={onFile}
+      />
+      <button
+        className="btn-secondary text-sm"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        title="CSV columns: full_name, primary_event, date_of_birth, sex, height_cm, weight_kg, country, notes"
+      >
+        {busy ? 'Importing…' : 'Import CSV'}
+      </button>
+      {result && (
+        <div className="fixed inset-0 z-40 bg-black/70 flex items-center justify-center p-6"
+             onClick={() => setResult(null)}>
+          <div className="card border border-sprint-teal/30 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-2xl text-white mb-3">Import result</h3>
+            {result.error ? (
+              <p className="text-sprint-coral">{result.error}</p>
+            ) : (
+              <>
+                <p className="text-slate-300">
+                  Created <span className="text-sprint-green font-display text-2xl">{result.created}</span>
+                  {' '}of <span className="text-slate-200">{result.total}</span> rows.
+                </p>
+                {result.results?.some((r) => !r.ok) && (
+                  <ul className="mt-3 text-xs text-slate-400 max-h-40 overflow-y-auto space-y-1">
+                    {result.results.filter((r) => !r.ok).map((r) => (
+                      <li key={r.line}>line {r.line}: {r.error}</li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+            <button className="btn-primary w-full mt-4" onClick={() => setResult(null)}>OK</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

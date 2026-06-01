@@ -28,4 +28,6 @@ export const biomechClient = {
   // to scale normalized metrics into real-world units when present.
   analyzeSprint: (frames, athleteHeightCm) =>
     safeCall('/sprint', { frames, athleteHeightCm }),
+  // Per-frame fault detection (overstride, knee collapse, heel strike, ...).
+  detectTechniqueErrors: (frames) => safeCall('/technique-errors', { frames }),
 };

@@ -74,3 +74,77 @@ export async function deleteAthlete(user, id) {
   if (!canManage(user, athlete)) throw Forbidden();
   await prisma.athlete.delete({ where: { id: athlete.id } });
 }
+
+// CSV columns supported (in any order, case-insensitive):
+//   full_name (required), primary_event, date_of_birth, sex,
+//   height_cm, weight_kg, country, notes
+const EVENT_NORMALIZE = {
+  '100': 'S100M', '100m': 'S100M', 's100m': 'S100M',
+  '200': 'S200M', '200m': 'S200M', 's200m': 'S200M',
+  '400': 'S400M', '400m': 'S400M', 's400m': 'S400M',
+  'relay': 'RELAY', 'practice': 'PRACTICE',
+};
+
+/**
+ * Bulk-create athletes from a CSV string. Returns per-row {ok, error?}.
+ * Coaches default coachId to themselves. Skips rows missing full_name.
+ */
+export async function bulkUpload(user, csv) {
+  const lines = csv.split(/\r?\n/).filter((l) => l.trim().length);
+  if (lines.length < 2) return { created: 0, results: [], reason: 'empty CSV' };
+
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/[^a-z_]/g, '_'));
+  const results = [];
+  let created = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const cells = parseCsvRow(lines[i]);
+    const row = {};
+    headers.forEach((h, j) => { row[h] = (cells[j] ?? '').trim(); });
+
+    if (!row.full_name) {
+      results.push({ line: i + 1, ok: false, error: 'missing full_name' });
+      continue;
+    }
+    const data = {
+      fullName:    row.full_name,
+      primaryEvent: EVENT_NORMALIZE[row.primary_event?.toLowerCase()] ?? 'S100M',
+      dateOfBirth: row.date_of_birth ? normalizeDob(row.date_of_birth) : undefined,
+      sex:         row.sex || undefined,
+      heightCm:    row.height_cm ? Number(row.height_cm) : undefined,
+      weightKg:    row.weight_kg ? Number(row.weight_kg) : undefined,
+      country:     row.country ? row.country.slice(0, 2).toUpperCase() : undefined,
+      notes:       row.notes || undefined,
+    };
+
+    try {
+      await createAthlete(user, data);
+      created++;
+      results.push({ line: i + 1, ok: true, name: data.fullName });
+    } catch (e) {
+      results.push({ line: i + 1, ok: false, error: e.message });
+    }
+  }
+
+  return { created, total: lines.length - 1, results };
+}
+
+function parseCsvRow(row) {
+  // Minimal CSV parser — handles quoted fields with commas inside.
+  const out = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < row.length; i++) {
+    const c = row[i];
+    if (inQuotes) {
+      if (c === '"' && row[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else cur += c;
+    } else {
+      if (c === ',') { out.push(cur); cur = ''; }
+      else if (c === '"') inQuotes = true;
+      else cur += c;
+    }
+  }
+  out.push(cur);
+  return out;
+}

@@ -50,6 +50,13 @@ enum SprintEvent {
   PRACTICE
 }
 
+enum ConsentScope {
+  TRAINING_DATA      // can be used to train SprintAI models
+  RESEARCH_RELEASE   // can be released as part of a research dataset
+  COACH_VISIBILITY   // coach may view full unblurred data
+  PUBLIC_RANKING     // included in the Global Talent Map rankings
+}
+
 model User {
   id            String         @id @default(uuid()) @db.Uuid
   email         String         @unique
@@ -91,6 +98,24 @@ model Athlete {
   @@index([coachId])
   @@index([country])
   @@map("athlete")
+}
+
+model Consent {
+  id          String       @id @default(uuid()) @db.Uuid
+  athleteId   String       @map("athlete_id") @db.Uuid
+  // Who recorded the consent (athlete themselves, coach, guardian).
+  grantedById String       @map("granted_by_id") @db.Uuid
+  scope       ConsentScope
+  granted     Boolean      @default(true)
+  notes       String?
+  // Version of the consent form text the user agreed to.
+  formVersion String       @default("v1") @map("form_version")
+  grantedAt   DateTime     @default(now()) @map("granted_at") @db.Timestamptz()
+  revokedAt   DateTime?    @map("revoked_at") @db.Timestamptz()
+
+  @@unique([athleteId, scope, formVersion])
+  @@index([athleteId])
+  @@map("consent")
 }
 
 model RefreshToken {

@@ -8,6 +8,8 @@ import Athlete3D from '../components/Athlete3D.jsx';
 import SprintScorecard from '../components/SprintScorecard.jsx';
 import PhaseTimeline from '../components/PhaseTimeline.jsx';
 import InsightsPanel from '../components/InsightsPanel.jsx';
+import FaultsPanel from '../components/FaultsPanel.jsx';
+import EliteFan from '../components/EliteFan.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
@@ -108,6 +110,12 @@ export default function SessionDetail() {
 
       {hasSprint && <SprintScorecard sprint={sprint} />}
       {hasSprint && <InsightsPanel sessionId={id} />}
+      {hasSprint && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          <EliteFan sprint={sprint} />
+          <FaultsPanel faults={summary.faults} />
+        </div>
+      )}
 
       {phases.length > 0 && (
         <section>

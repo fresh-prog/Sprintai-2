@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from .models.activity import ACTIVITY_CLASSES, PER_FRAME_DIM, WINDOW_LEN
 from .models.posture import FEATURE_DIM, POSTURE_CLASSES
+from .models.phase import SPRINT_PHASES, WINDOW_LEN as PHASE_WIN
 from .utils.features import feature_vector
 
 logging.basicConfig(level=logging.INFO)
@@ -27,9 +28,11 @@ app = FastAPI(title="SprintAI ML", version="0.1.0")
 
 POSTURE_DIR = Path(os.getenv("POSTURE_MODEL_DIR", "checkpoints/posture"))
 ACTIVITY_DIR = Path(os.getenv("ACTIVITY_MODEL_DIR", "checkpoints/activity"))
+PHASE_DIR = Path(os.getenv("PHASE_MODEL_DIR", "checkpoints/phase"))
 
 _posture_model = None
 _activity_model = None
+_phase_model = None
 
 
 def _try_load(path: Path):
@@ -46,10 +49,14 @@ def _try_load(path: Path):
 
 @app.on_event("startup")
 def _startup():
-    global _posture_model, _activity_model
+    global _posture_model, _activity_model, _phase_model
     _posture_model = _try_load(POSTURE_DIR)
     _activity_model = _try_load(ACTIVITY_DIR)
-    log.info("posture=%s activity=%s", bool(_posture_model), bool(_activity_model))
+    _phase_model = _try_load(PHASE_DIR)
+    log.info(
+        "posture=%s activity=%s phase=%s",
+        bool(_posture_model), bool(_activity_model), bool(_phase_model),
+    )
 
 
 # ---------- Schemas ----------
@@ -73,7 +80,41 @@ class Prediction(BaseModel):
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "posture": bool(_posture_model), "activity": bool(_activity_model)}
+    return {
+        "ok": True,
+        "posture": bool(_posture_model),
+        "activity": bool(_activity_model),
+        "phase": bool(_phase_model),
+    }
+
+
+class PhaseRequest(BaseModel):
+    # Each frame is the 132-scalar landmark dump; we featurize on the server.
+    window: list[list[float]]
+
+
+@app.post("/predict/phase", response_model=Prediction)
+def predict_phase(req: PhaseRequest):
+    """Sprint phase classifier. Falls back to a deterministic stub if no
+    checkpoint has been published; the biomech service still gets a valid
+    label so the heuristic path can be kept as the default."""
+    if not req.window:
+        return Prediction(label="acceleration", confidence=0.0)
+    feats = np.stack([feature_vector(f) for f in req.window[-PHASE_WIN:]])
+    if feats.shape[0] < PHASE_WIN:
+        pad = np.zeros((PHASE_WIN - feats.shape[0], PER_FRAME_DIM), dtype=np.float32)
+        feats = np.concatenate([pad, feats], axis=0)
+    x = feats.reshape(1, PHASE_WIN, PER_FRAME_DIM)
+    if _phase_model is None:
+        idx = int(abs(x.sum())) % len(SPRINT_PHASES)
+        return Prediction(label=SPRINT_PHASES[idx], confidence=0.0)
+    probs = _phase_model.predict(x, verbose=0)[0]
+    idx = int(np.argmax(probs))
+    return Prediction(
+        label=SPRINT_PHASES[idx],
+        confidence=float(probs[idx]),
+        probs={c: float(p) for c, p in zip(SPRINT_PHASES, probs)},
+    )
 
 
 @app.post("/predict/posture", response_model=Prediction)

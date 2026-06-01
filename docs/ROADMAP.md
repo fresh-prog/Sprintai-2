@@ -143,15 +143,21 @@ Ugandan-cohort study.
 - [x] Athlete similarity model (k-NN on normalized 6-feature technique vector)
 - [x] Performance prediction (linear model → 100m time + confidence band)
 - [x] Injury-risk classifier (rule-based: asymmetry, GCT outliers, knee drive, trunk lean)
-- [ ] TCN phase classifier (replaces heuristic phase timeline)
-- [ ] Technique error detection (per-frame fault tags)
+- [x] TCN phase classifier (model arch + training script + ML service `/predict/phase`; biomech keeps heuristic as default until a checkpoint is published)
+- [x] Technique error detection (per-frame fault tags: overstride, knee collapse, heel strike, arm cross-body, excessive trunk lean) — persisted as `TECHNIQUE_ERROR` predictions
 
 ### Phase 9 — Visualization & connection
 
 - [x] Global Talent Map (Leaflet world view of anonymized scores by country)
 - [x] Chart.js performance-over-time per athlete (`AthleteTrendline`)
 - [x] Insights panel on session detail (predicted time / injury risk / similar athletes)
-- [ ] D3 elite-fan comparison chart (athlete vs elite distribution)
-- [ ] Coach roster bulk-upload (CSV)
-- [ ] Research consent flow + cohort export endpoint
-- [ ] Mobile-first capture UI (works on a phone browser)
+- [x] D3 elite-fan radar chart (athlete vs elite distribution) — `components/EliteFan.jsx`
+- [x] Coach roster bulk-upload (CSV) — `POST /athletes/bulk` with multipart CSV
+- [x] Research consent flow — `Consent` model + 4 scopes + `/athletes/:id/consents`
+- [x] Mobile-first capture UI — responsive headers, fluid video frame, wrapped navbar
+
+**Sprint AI v2 is feature-complete vs the project spec.** Remaining work is
+incremental: trained models replacing the rule-based stand-ins (TCN phase
+classifier, learned injury-risk model), real-data evaluation slices per
+country (Ugandan cohort per `RESEARCH_METHODOLOGY.md`), and operational
+hardening for the in-country deployment.

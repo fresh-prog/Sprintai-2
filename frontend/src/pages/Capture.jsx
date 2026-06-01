@@ -82,24 +82,28 @@ export default function Capture() {
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="space-y-2">
         <p className="section-eyebrow">Sprint Capture</p>
-        <h1 className="font-display text-5xl text-white mt-2 flex items-center gap-4 flex-wrap">
-          LIVE CAPTURE
-          {sessionId
-            ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
-            : <button onClick={startSession} className="btn-primary text-sm" disabled={!camReady || !poseReady}>
-                {camReady && poseReady ? 'Start session →' : 'Loading…'}
-              </button>}
-        </h1>
-        <p className="text-slate-300 mt-2 max-w-2xl">
+        <h1 className="font-display text-3xl sm:text-5xl text-white">LIVE CAPTURE</h1>
+        <p className="text-slate-300 text-sm sm:text-base max-w-2xl">
           Film a 40m run — we extract 33 body landmarks per frame for biomechanical scoring.
         </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {sessionId
+            ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
+            : <button onClick={startSession}
+                      className="btn-primary text-sm w-full sm:w-auto"
+                      disabled={!camReady || !poseReady}>
+                {camReady && poseReady ? 'Start session →' : 'Loading…'}
+              </button>}
+        </div>
       </header>
 
-      <div className="relative inline-block rounded-2xl overflow-hidden border border-sprint-teal/30 shadow-2xl shadow-black/40">
+      {/* Video frame: scales to fit screen; fixed aspect ratio. */}
+      <div className="relative w-full max-w-3xl rounded-2xl overflow-hidden border border-sprint-teal/30 shadow-2xl shadow-black/40"
+           style={{ aspectRatio: `${WIDTH} / ${HEIGHT}` }}>
         <video ref={videoRef} className="hidden" width={WIDTH} height={HEIGHT} muted playsInline />
-        <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} className="block" />
+        <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} className="block w-full h-full" />
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4 max-w-3xl">

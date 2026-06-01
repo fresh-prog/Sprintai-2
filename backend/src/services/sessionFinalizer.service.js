@@ -34,9 +34,10 @@ export async function finalizeSession(sessionId) {
     keypoints: f.keypoints,
   }));
 
-  const [summary, sprint] = await Promise.all([
+  const [summary, sprint, faults] = await Promise.all([
     biomechClient.computeSummary(payload),
     biomechClient.analyzeSprint(payload, session.athlete?.heightCm),
+    biomechClient.detectTechniqueErrors(payload),
   ]);
 
   if (!summary && !sprint) {
@@ -96,13 +97,28 @@ export async function finalizeSession(sessionId) {
     }
   }
 
+  // -- Per-frame technique faults ---------------------------------------------
+  const faultPreds = [];
+  if (faults?.ok && Array.isArray(faults.errors)) {
+    for (const e of faults.errors) {
+      faultPreds.push({
+        sessionId,
+        kind: 'TECHNIQUE_ERROR',
+        tsMs: e.tsMs,
+        label: e.tag,
+        confidence: ({ info: 0.25, minor: 0.5, major: 0.75, critical: 1.0 })[e.severity] ?? 0.5,
+        meta: { joint: e.joint, value: e.value, severity: e.severity, message: e.message },
+      });
+    }
+  }
+
   await prisma.$transaction([
     prisma.metric.deleteMany({
       where: { sessionId, OR: MANAGED_PREFIXES.map((p) => ({ name: { startsWith: p } })) },
     }),
     prisma.metric.createMany({ data: rows }),
-    prisma.prediction.deleteMany({ where: { sessionId, kind: 'SPRINT_PHASE' } }),
-    prisma.prediction.createMany({ data: predictions }),
+    prisma.prediction.deleteMany({ where: { sessionId, kind: { in: ['SPRINT_PHASE', 'TECHNIQUE_ERROR'] } } }),
+    prisma.prediction.createMany({ data: [...predictions, ...faultPreds] }),
   ]);
 
   logger.info(

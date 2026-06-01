@@ -22,6 +22,7 @@ from .reps import count as count_reps
 from .sprint import analyze_sprint
 from .video import extract_frames
 from .ml_endpoints import athlete_similarity, injury_risk, predict_100m_time
+from .technique import detect_errors
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("biomech")
@@ -184,6 +185,14 @@ class PredictTimeRequest(BaseModel):
 @app.post("/ml/predict-time")
 def ml_predict_time(req: PredictTimeRequest) -> dict[str, Any]:
     return predict_100m_time(req.metrics)
+
+
+@app.post("/technique-errors")
+def technique_errors(batch: FrameBatch) -> dict[str, Any]:
+    """Per-frame fault detection — overstride, knee collapse, heel strike,
+    arm cross-body, excessive trunk lean. Heuristic + explainable."""
+    frames = [f.model_dump() for f in batch.frames]
+    return detect_errors(frames)
 
 
 @app.post("/ik/run")

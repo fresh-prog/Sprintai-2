@@ -18,6 +18,7 @@ import authRoutes from './routes/auth.routes.js';
 import sessionRoutes from './routes/session.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import athleteRoutes from './routes/athlete.routes.js';
+import consentRoutes from './routes/consent.routes.js';
 import mlRoutes from './routes/ml.routes.js';
 
 export function buildApp() {
@@ -46,6 +47,7 @@ export function buildApp() {
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/sessions', sessionRoutes);
   app.use('/api/v1/athletes', athleteRoutes);
+  app.use('/api/v1', consentRoutes);
   app.use('/api/v1', mlRoutes);
   app.use('/api/v1', analyticsRoutes);
 
