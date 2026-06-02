@@ -61,15 +61,20 @@ export default function Upload() {
       // 2. Upload the video to that session.
       const form = new FormData();
       form.append('video', file);
-      await api.post(`/sessions/${session.id}/upload`, form, {
+      const { data: uploaded } = await api.post(`/sessions/${session.id}/upload`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => {
           if (e.total) setProgress(Math.round((e.loaded / e.total) * 100));
         },
       });
 
-      // 3. Hop to the session detail page — frame extraction picks up async.
-      nav(`/sessions/${session.id}`);
+      // 3. Hop to the right session — duplicate uploads bounce to the
+      // existing session rather than creating a brand new one.
+      if (uploaded?.duplicate && uploaded.sessionId) {
+        nav(`/sessions/${uploaded.sessionId}?from=duplicate`);
+      } else {
+        nav(`/sessions/${session.id}`);
+      }
     } catch (err) {
       setError(err.response?.data?.error?.message ?? err.message ?? 'Upload failed');
       setBusy(false);

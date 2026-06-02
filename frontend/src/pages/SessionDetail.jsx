@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import api, { downloadAuthed } from '../services/api.js';
 import AngleChart from '../components/AngleChart.jsx';
 import MovementMap from '../components/MovementMap.jsx';
@@ -14,9 +14,33 @@ import CoachReport from '../components/CoachReport.jsx';
 
 export default function SessionDetail() {
   const { id } = useParams();
+  const [search, setSearch] = useSearchParams();
+  const fromDuplicate = search.get('from') === 'duplicate';
   const [summary, setSummary] = useState(null);
   const [metrics, setMetrics] = useState([]);
   const [frames, setFrames] = useState([]);
+  const [reprocessing, setReprocessing] = useState(false);
+
+  async function onReprocess() {
+    if (!confirm('Re-run pose extraction + sprint analysis on this video? Existing metrics will be replaced.')) return;
+    setReprocessing(true);
+    try {
+      await api.post(`/sessions/${id}/reprocess`);
+      // Force a fresh fetch — the polling loop in useEffect will pick up
+      // the PROCESSING status and refresh once it completes.
+      const { data } = await api.get(`/sessions/${id}/summary`);
+      setSummary(data);
+    } catch (err) {
+      alert(err.response?.data?.error?.message ?? 'Reprocess failed');
+    } finally {
+      setReprocessing(false);
+    }
+  }
+
+  function dismissDuplicate() {
+    search.delete('from');
+    setSearch(search, { replace: true });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +115,16 @@ export default function SessionDetail() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          {summary.session.source === 'UPLOAD' && (
+            <button
+              className="btn-secondary text-sm"
+              onClick={onReprocess}
+              disabled={reprocessing || summary.session.status === 'PROCESSING'}
+              title="Re-run pose extraction + sprint analysis on the existing video"
+            >
+              {reprocessing ? 'Queuing…' : '↻ Reprocess'}
+            </button>
+          )}
           <button className="btn-secondary text-sm"
                   onClick={() => downloadAuthed(`/sessions/${id}/export?format=json`, `session-${id}.json`)}>
             JSON
@@ -106,6 +140,7 @@ export default function SessionDetail() {
         </div>
       </header>
 
+      {fromDuplicate && <DuplicateBanner onDismiss={dismissDuplicate} />}
       {summary.session.status === 'PROCESSING' && <ProcessingBanner />}
       {summary.session.status === 'FAILED' && <FailedBanner meta={summary.session.meta} />}
 
@@ -202,6 +237,22 @@ function FailedBanner({ meta }) {
         Common causes: athlete not visible in frame, video too short (&lt; 1 s),
         unsupported codec. Try a side-view clip with the full body visible.
       </p>
+    </div>
+  );
+}
+
+function DuplicateBanner({ onDismiss }) {
+  return (
+    <div className="card border-l-4 border-l-sprint-teal flex items-start gap-4">
+      <div className="flex-1">
+        <p className="font-display text-xl text-white">Duplicate upload — opened existing session</p>
+        <p className="text-slate-400 text-sm mt-1">
+          We detected the exact same video file you'd uploaded before, so we brought you to the
+          original session instead of re-processing it. Use <span className="text-sprint-teal">↻ Reprocess</span>
+          {' '}above if you want to re-run the analysis with the latest scoring rules.
+        </p>
+      </div>
+      <button onClick={onDismiss} className="btn-ghost text-xs">Dismiss</button>
     </div>
   );
 }

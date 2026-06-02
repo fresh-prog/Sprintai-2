@@ -161,12 +161,16 @@ model VideoAsset {
   id          String   @id @default(uuid()) @db.Uuid
   sessionId   String   @unique @map("session_id") @db.Uuid
   storagePath String   @map("storage_path")
+  // SHA-256 of the file contents. We use this to detect duplicate uploads
+  // and bounce the user to the existing session instead of re-processing.
+  hash        String?  @db.VarChar(64)
   durationMs  Int?     @map("duration_ms")
   width       Int?
   height      Int?
   uploadedAt  DateTime @default(now()) @map("uploaded_at") @db.Timestamptz()
   session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
+  @@index([hash])
   @@map("video_asset")
 }
 

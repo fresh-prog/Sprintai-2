@@ -25,6 +25,7 @@ r.delete('/:id',     validate({ params: idParam }), ctrl.destroy);
 r.post('/:id/frames', validate({ params: idParam, body: ingestFramesSchema }), ctrl.ingestFrames);
 r.get('/:id/frames',  validate({ params: idParam }), ctrl.getFrames);
 
-r.post('/:id/upload', validate({ params: idParam }), upload.single('video'), ctrl.uploadVideo);
+r.post('/:id/upload',    validate({ params: idParam }), upload.single('video'), ctrl.uploadVideo);
+r.post('/:id/reprocess', validate({ params: idParam }), ctrl.reprocess);
 
 export default r;
