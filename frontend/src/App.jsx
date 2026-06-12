@@ -1,19 +1,22 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { useAuthStore } from './store/authStore.js';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Capture from './pages/Capture.jsx';
-import Upload from './pages/Upload.jsx';
-import Sessions from './pages/Sessions.jsx';
-import SessionDetail from './pages/SessionDetail.jsx';
-import Athletes from './pages/Athletes.jsx';
-import TalentMap from './pages/TalentMap.jsx';
-import Admin from './pages/Admin.jsx';
+
+// Heavy pages (charts, 3D, Leaflet, MediaPipe) are split into their own
+// chunks so the first paint isn't blocked by libraries the user may never hit.
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Capture = lazy(() => import('./pages/Capture.jsx'));
+const Upload = lazy(() => import('./pages/Upload.jsx'));
+const Sessions = lazy(() => import('./pages/Sessions.jsx'));
+const SessionDetail = lazy(() => import('./pages/SessionDetail.jsx'));
+const Athletes = lazy(() => import('./pages/Athletes.jsx'));
+const TalentMap = lazy(() => import('./pages/TalentMap.jsx'));
+const Admin = lazy(() => import('./pages/Admin.jsx'));
 
 function Protected({ children, admin = false }) {
   const { user, loading } = useAuthStore();
@@ -39,6 +42,7 @@ export default function App() {
       <Navbar />
       <main className="flex-1 w-full">
         <PageContainer>
+          <Suspense fallback={<div className="p-10 text-center text-slate-300">Loading…</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -53,6 +57,7 @@ export default function App() {
             <Route path="/admin" element={<Protected admin><Admin /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </PageContainer>
       </main>
       <Footer />

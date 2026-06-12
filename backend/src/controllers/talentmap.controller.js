@@ -5,7 +5,8 @@ import { prisma } from '../config/db.js';
 
 export async function aggregate(_req, res) {
   // Pull every athlete that has at least one completed session with a
-  // sprint score, group by country, compute the aggregate.
+  // sprint score, group by country, compute the aggregate. Only athletes
+  // with an active PUBLIC_RANKING consent are included.
   const rows = await prisma.$queryRaw`
     SELECT
       a.country                                AS country,
@@ -17,6 +18,13 @@ export async function aggregate(_req, res) {
     JOIN session s ON s.athlete_id = a.id
     JOIN metric  m ON m.session_id = s.id AND m.name = 'sprint.sprint_score'
     WHERE s.status = 'COMPLETED' AND a.country IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM consent c
+        WHERE c.athlete_id = a.id
+          AND c.scope = 'PUBLIC_RANKING'
+          AND c.granted = true
+          AND c.revoked_at IS NULL
+      )
     GROUP BY a.country
     ORDER BY athletes DESC;
   `;

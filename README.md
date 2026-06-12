@@ -171,16 +171,33 @@ sprintai-2/
 
 ## Quick start
 
+The only prerequisite is **Docker Desktop** (or Docker Engine + Compose).
+
+### Production — run it like a real deployment
+
 ```bash
 # 1. Clone & enter
 git clone https://github.com/fresh-prog/sprintai-2.git
 cd sprintai-2
 
-# 2. Copy env template
-cp .env.example .env
-# edit .env – set JWT_SECRET, DB credentials, etc.
+# 2. Generate .env with random secrets (one-time)
+./scripts/setup.sh                                        # macOS / Linux / Git Bash
+# powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Windows PowerShell
 
-# 3. Bring everything up
+# 3. Build and start everything
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Open **http://localhost:8080** — or **http://\<this-machine's-IP\>:8080**
+from any other device on the network. Each person registers their own
+account; all data is scoped per user. Database migrations run automatically
+on first boot. Only port 8080 is exposed; Postgres, Redis, and the Python
+services stay on the internal Docker network.
+
+### Development — hot reload
+
+```bash
+./scripts/setup.sh        # once
 docker compose up --build
 
 # Services:

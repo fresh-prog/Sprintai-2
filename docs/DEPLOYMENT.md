@@ -93,14 +93,18 @@ server {
 # Build hardened, non-root, multi-stage images.
 docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 
-# Run the prod stack (frontend on :8080, backend on :4000).
+# Run the prod stack. Only the frontend (:8080) is published — nginx
+# proxies /api and /socket.io to the backend over the internal network,
+# so the app works from any device that can reach the host.
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 The production targets:
 
-- Backend → `node src/server.js` with `NODE_ENV=production`, dev dependencies
-  pruned, running as a non-root `app` user under `tini` for signal handling.
+- Backend → `npm start` (Prisma `migrate deploy`, then the server) with
+  `NODE_ENV=production`, dev dependencies pruned, running as a non-root
+  `app` user under `tini` for signal handling. Refuses to boot if the JWT
+  secrets are still the `.env.example` placeholders.
 - Frontend → `nginx-unprivileged` serving the static Vite bundle from
   `/usr/share/nginx/html`; aggressive caching for `/assets/*`, never-cache on
   `index.html`, defensive headers in `frontend/nginx.conf`.

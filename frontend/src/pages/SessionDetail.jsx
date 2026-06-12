@@ -56,22 +56,34 @@ export default function SessionDetail() {
       setFrames(f.data.frames ?? []);
     }
     load();
+    return () => { cancelled = true; };
+  }, [id]);
 
-    // Poll every 3s while the session is still PROCESSING — covers the
-    // upload-pipeline path where frame extraction is in flight.
+  // Poll every 3s while the session is PROCESSING — covers both the upload
+  // pipeline and a reprocess kicked off from this page. Keyed on status so
+  // the interval starts/stops exactly when processing does.
+  const status = summary?.session?.status;
+  useEffect(() => {
+    if (status !== 'PROCESSING') return;
+    let cancelled = false;
     const tick = setInterval(async () => {
       try {
         const { data } = await api.get(`/sessions/${id}/summary`);
         if (cancelled) return;
+        setSummary(data);
         if (data.session?.status !== 'PROCESSING') {
-          await load();
-          clearInterval(tick);
+          const [m, f] = await Promise.all([
+            api.get(`/sessions/${id}/metrics`),
+            api.get(`/sessions/${id}/frames`),
+          ]);
+          if (cancelled) return;
+          setMetrics(m.data.metrics ?? []);
+          setFrames(f.data.frames ?? []);
         }
       } catch { /* network blip — try again next tick */ }
     }, 3000);
-
     return () => { cancelled = true; clearInterval(tick); };
-  }, [id]);
+  }, [status, id]);
 
   const series = useMemo(() => {
     const byTs = new Map();

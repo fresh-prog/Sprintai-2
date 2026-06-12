@@ -27,12 +27,26 @@ export function attachSockets(httpServer) {
     }
   });
 
+  // Resolves only when the session exists and belongs to this socket's user.
+  async function assertOwnsSession(socket, sessionId) {
+    if (!sessionId) return false;
+    const s = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { userId: true },
+    });
+    return s !== null && s.userId === socket.data.user.id;
+  }
+
   io.of('/ws/pose').on('connection', (socket) => {
     logger.info({ user: socket.data.user.id }, 'pose socket connected');
 
-    socket.on('session:join', ({ sessionId }) => {
+    socket.on('session:join', async ({ sessionId }, ack) => {
+      if (!(await assertOwnsSession(socket, sessionId))) {
+        return ack?.({ ok: false, error: 'FORBIDDEN' });
+      }
       socket.join(`session:${sessionId}`);
       socket.data.sessionId = sessionId;
+      ack?.({ ok: true });
     });
 
     socket.on('pose:window', async ({ frames }, ack) => {
@@ -74,7 +88,10 @@ export function attachSockets(httpServer) {
       ack?.({ received: frames.length, persisted });
     });
 
-    socket.on('session:end', async ({ sessionId }) => {
+    socket.on('session:end', async ({ sessionId }, ack) => {
+      if (!(await assertOwnsSession(socket, sessionId))) {
+        return ack?.({ ok: false, error: 'FORBIDDEN' });
+      }
       await prisma.session.update({
         where: { id: sessionId },
         data: { status: 'COMPLETED', endedAt: new Date() },
@@ -83,6 +100,7 @@ export function attachSockets(httpServer) {
       finalizeSession(sessionId).catch((err) =>
         logger.error({ err: err.message, sessionId }, 'finalize failed'),
       );
+      ack?.({ ok: true });
     });
 
     socket.on('disconnect', () => {

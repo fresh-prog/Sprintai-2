@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// In production the bundle is served by nginx, which proxies /api to the
+// backend — relative URLs make the app work on any host/IP without a rebuild.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api/v1',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ??
+    (import.meta.env.PROD ? '/api/v1' : 'http://localhost:4000/api/v1'),
   withCredentials: true,
 });
 

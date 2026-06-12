@@ -4,6 +4,10 @@
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
+# Only the frontend is published to the host; nginx inside it proxies
+# /api and /socket.io to the backend over the internal network. Postgres,
+# Redis and the Python services are never exposed in production.
+
 services:
   backend:
     build:
@@ -11,22 +15,32 @@ services:
       target: production
     environment:
       NODE_ENV: production
+    ports: !reset []
     volumes:
       - uploads:/app/uploads
-    # Override the dev bind-mount that docker-compose.yml carries.
-    command: ["node", "src/server.js"]
+    # Apply pending migrations, then start. `npm start` keeps the two in
+    # lockstep so a fresh machine gets its schema on first boot.
+    command: ["npm", "start"]
 
   frontend:
     build:
       context: ./frontend
       target: production
-    ports:
+    ports: !override
       - "8080:8080"
     volumes: []
     # Static bundle is baked into the image; no command override needed.
 
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
   ml:
+    ports: !reset []
     command: ["uvicorn", "src.inference_server:app", "--host", "0.0.0.0", "--port", "8001"]
 
   biomech:
+    ports: !reset []
     command: ["uvicorn", "src.opensim_service:app", "--host", "0.0.0.0", "--port", "8002"]

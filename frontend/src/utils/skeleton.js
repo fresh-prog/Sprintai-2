@@ -21,6 +21,7 @@ export function drawSkeleton(ctx, landmarks, w, h) {
     ctx.stroke();
   }
   for (const p of landmarks) {
+    if (!p) continue;
     ctx.beginPath();
     ctx.arc(p.x * w, p.y * h, 4, 0, Math.PI * 2);
     ctx.fill();

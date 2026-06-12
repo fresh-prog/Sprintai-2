@@ -35,3 +35,20 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
+
+// Refuse to boot a production server with the secrets that ship in
+// .env.example — they're public and would let anyone forge tokens.
+if (isProd) {
+  const placeholders = [env.JWT_ACCESS_SECRET, env.JWT_REFRESH_SECRET].filter((s) =>
+    s.startsWith('change-me-'),
+  );
+  if (placeholders.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error(
+      'Refusing to start: JWT_ACCESS_SECRET / JWT_REFRESH_SECRET still hold the',
+      '.env.example placeholders. Generate real secrets, e.g.:',
+      "node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\"",
+    );
+    process.exit(1);
+  }
+}
