@@ -24,6 +24,11 @@ import mlRoutes from './routes/ml.routes.js';
 export function buildApp() {
   const app = express();
 
+  // We sit behind the frontend nginx (and optionally Caddy for TLS) in
+  // production. Trust the immediate proxy so req.secure / req.ip reflect
+  // the X-Forwarded-* headers it sets.
+  app.set('trust proxy', 1);
+
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '2mb' }));

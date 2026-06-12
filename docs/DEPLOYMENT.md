@@ -97,6 +97,12 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 # proxies /api and /socket.io to the backend over the internal network,
 # so the app works from any device that can reach the host.
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Public server with a domain? Add the HTTPS overlay (set DOMAIN in .env
+# first). Caddy terminates TLS with auto-renewed Let's Encrypt certs and
+# becomes the only published service (80/443).
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+  -f docker-compose.https.yml up -d --build
 ```
 
 The production targets:

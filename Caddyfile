@@ -1,0 +1,19 @@
+# Public HTTPS entrypoint. Caddy obtains and renews Let's Encrypt
+# certificates automatically for $DOMAIN — no manual cert handling.
+#
+# Requirements before first start:
+#   - DOMAIN set in .env (e.g. DOMAIN=sprintai.example.com)
+#   - DNS A record for that domain pointing at this server
+#   - Ports 80 and 443 reachable from the internet
+{$DOMAIN} {
+	encode gzip
+
+	# Everything goes to the frontend nginx, which serves the SPA and
+	# proxies /api + /socket.io to the backend. WebSockets pass through
+	# reverse_proxy automatically.
+	reverse_proxy frontend:8080
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}

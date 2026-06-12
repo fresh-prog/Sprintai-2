@@ -1,15 +1,17 @@
 import { prisma } from '../config/db.js';
-import { isProd } from '../config/env.js';
 import * as authService from '../services/auth.service.js';
 import { revokeRefreshToken } from '../services/token.service.js';
 import { Unauthorized } from '../utils/errors.js';
 
 const REFRESH_COOKIE = 'refresh_token';
 
-function setRefreshCookie(res, raw, expiresAt) {
+function setRefreshCookie(req, res, raw, expiresAt) {
   res.cookie(REFRESH_COOKIE, raw, {
     httpOnly: true,
-    secure: isProd,
+    // Follow the request scheme (X-Forwarded-Proto via trust proxy): Secure
+    // over HTTPS, plain over HTTP — a hard-coded Secure flag would make
+    // browsers silently drop the cookie on http://<lan-ip> deployments.
+    secure: req.secure,
     sameSite: 'lax',
     expires: expiresAt,
     path: '/api/v1/auth',
@@ -23,7 +25,7 @@ export async function register(req, res) {
 
 export async function login(req, res) {
   const { accessToken, refresh, user } = await authService.login(req.body);
-  setRefreshCookie(res, refresh.raw, refresh.expiresAt);
+  setRefreshCookie(req, res, refresh.raw, refresh.expiresAt);
   res.json({ accessToken, user });
 }
 
@@ -31,7 +33,7 @@ export async function refresh(req, res) {
   const raw = req.cookies[REFRESH_COOKIE];
   if (!raw) throw Unauthorized('No refresh token');
   const { accessToken, refresh: next } = await authService.refresh(raw);
-  setRefreshCookie(res, next.raw, next.expiresAt);
+  setRefreshCookie(req, res, next.raw, next.expiresAt);
   res.json({ accessToken });
 }
 

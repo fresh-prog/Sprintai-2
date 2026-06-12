@@ -194,6 +194,22 @@ account; all data is scoped per user. Database migrations run automatically
 on first boot. Only port 8080 is exposed; Postgres, Redis, and the Python
 services stay on the internal Docker network.
 
+### Public hosting with HTTPS (free Let's Encrypt certs)
+
+On a public server with a domain name, add the HTTPS overlay — Caddy
+obtains and renews certificates automatically:
+
+```bash
+# .env: set DOMAIN=your.domain.com  (DNS A record → this server)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+  -f docker-compose.https.yml up -d --build
+```
+
+The app is then served at `https://your.domain.com` with HTTP→HTTPS
+redirects and HSTS. Note: webcam capture requires HTTPS (or localhost) —
+browsers block camera access on plain-HTTP origins, so use this overlay
+for any internet-facing deployment.
+
 ### Development — hot reload
 
 ```bash

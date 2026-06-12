@@ -1,0 +1,33 @@
+# HTTPS overlay: adds Caddy in front of the production stack for automatic
+# Let's Encrypt certificates. Use on a public server with a domain name.
+#
+# Usage:
+#   1. Set DOMAIN=your.domain.com in .env (DNS A record → this server)
+#   2. docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#        -f docker-compose.https.yml up -d --build
+#
+# Caddy takes over ports 80/443; the frontend is no longer published
+# directly — all traffic flows internet → Caddy (TLS) → nginx → backend.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env to your public domain name}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+
+  frontend:
+    ports: !override []
+
+volumes:
+  caddy-data:
+  caddy-config:
