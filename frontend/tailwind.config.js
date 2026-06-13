@@ -1,6 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  // Accent classes are built dynamically (bg-sprint-${accent}/15 etc.), so the
+  // JIT can't see them in source — safelist the full matrix we use.
+  safelist: [
+    ...['coral', 'teal', 'orange', 'green', 'purple'].flatMap((c) => [
+      `bg-sprint-${c}`, `bg-sprint-${c}/15`, `text-sprint-${c}`, `text-sprint-${c}/40`,
+      `ring-sprint-${c}/30`, `border-l-sprint-${c}`,
+    ]),
+  ],
   theme: {
     extend: {
       colors: {

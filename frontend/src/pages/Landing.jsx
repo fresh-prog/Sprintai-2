@@ -1,21 +1,19 @@
 import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import { useRef } from 'react';
+import {
+  Globe2, Wallet, Eye, Hourglass, Video, ScanLine, Gauge, MessageSquareText,
+  MapPinned, Smartphone, UploadCloud, Cpu, BarChart3, Trophy, Rocket, Scale as ScaleIcon,
+  Building2, DraftingCompass, Medal, ChevronDown, ArrowRight, Sparkles,
+} from 'lucide-react';
+import { img } from '../lib/images.js';
+import { Reveal, Stagger, staggerItem, Tilt, CountUp, Magnetic } from '../components/Motion.jsx';
 
-/**
- * Landing page — mirrors the Sprint AI deck slide-for-slide.
- *
- * Sections (one per slide):
- *  1. Hero            — title, tagline, 9.58s / 19.19s / 200M+ stats
- *  2. The Problem     — 4 problem cards
- *  3. Scale of Missed Talent — 3 metrics + Bolt quote
- *  4. The Solution    — 5 numbered steps
- *  5. How It Works    — 5-step flow + "What the AI measures"
- *  6. Expected Impact — 4 outcome cards + 3 stat cards
- *  7. Conclusion      — 4 roadmap phases + CTA
- */
 export default function Landing() {
   return (
-    <div className="text-slate-100">
+    <div className="text-slate-100 overflow-clip">
       <Hero />
+      <Marquee />
       <Problem />
       <Scale />
       <Solution />
@@ -26,316 +24,443 @@ export default function Landing() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Slide 1 — Hero                                                              */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/* HERO — full-bleed cinematic                                                 */
+/* ========================================================================== */
 function Hero() {
+  const reduce = useReducedMotion();
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.18]);
+  const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sprint-coral via-sprint-orange to-sprint-teal" />
-      <div className="max-w-7xl mx-auto px-6 pt-20 md:pt-28 pb-16">
-        <p className="section-eyebrow mb-6">Class Presentation · AI Project Proposal</p>
-        <h1 className="font-display text-7xl sm:text-8xl md:text-[10rem] text-white leading-[0.85]">
-          SPRINT AI
+    <section ref={ref} className="relative min-h-[100svh] flex items-end overflow-hidden grain">
+      {/* Parallax background photo */}
+      <motion.div
+        style={{ y: reduce ? 0 : bgY, scale: reduce ? 1.05 : bgScale }}
+        className="absolute inset-0 -z-10"
+      >
+        <img
+          src={img('heroGolden', { w: 2200, q: 82 })}
+          alt="A sprinter accelerating through golden evening light on a track"
+          className="h-full w-full object-cover object-center"
+          fetchpriority="high"
+        />
+        <div className="absolute inset-0 scrim-bottom" />
+        <div className="absolute inset-0 scrim-left" />
+      </motion.div>
+
+      {/* Ambient aurora */}
+      <div className="aurora -z-10 top-[-10%] left-[-5%] h-72 w-72 bg-sprint-orange/30" aria-hidden />
+
+      <motion.div style={{ opacity: reduce ? 1 : fade }} className="relative w-full max-w-7xl mx-auto px-6 pb-20 md:pb-28">
+        <motion.p
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="section-eyebrow mb-5"
+        >
+          <Sparkles className="h-4 w-4" /> AI-Powered Talent Discovery
+        </motion.p>
+
+        <h1 className="font-display leading-[0.82] text-white drop-shadow-2xl">
+          <motion.span
+            className="block text-[22vw] md:text-[15rem]"
+            initial={reduce ? false : { opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          >
+            SPRINT
+          </motion.span>
+          <motion.span
+            className="block text-[22vw] md:text-[15rem] text-gradient"
+            initial={reduce ? false : { opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          >
+            AI
+          </motion.span>
         </h1>
-        <p className="mt-6 text-sprint-orange text-lg md:text-2xl italic font-medium max-w-3xl">
-          Discovering World-Class 100m – 200m Talent with Artificial Intelligence
-        </p>
-        <div className="mt-6 h-px w-64 bg-sprint-teal/70" />
-        <p className="mt-6 text-slate-300 text-lg">The Problem. The Solution. The Future.</p>
 
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl">
-          <StatCard value="9.58s" label="World Record 100m" />
-          <StatCard value="19.19s" label="World Record 200m" />
-          <StatCard value="200M+" label="Untapped Athletes" />
-        </div>
+        <motion.p
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mt-6 max-w-2xl text-lg md:text-2xl text-slate-200 font-medium"
+        >
+          Every champion starts somewhere. We use computer vision to find world-class
+          100m–200m talent — anywhere on earth, from a single phone video.
+        </motion.p>
 
-        <div className="mt-12 flex flex-wrap gap-3">
-          <Link to="/register" className="btn-primary">Get assessed →</Link>
-          <a href="#problem" className="btn-secondary">See the problem</a>
-        </div>
-      </div>
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.42 }}
+          className="mt-9 flex flex-wrap items-center gap-4"
+        >
+          <Magnetic>
+            <Link to="/register" className="btn-primary text-base">
+              Get assessed <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Magnetic>
+          <a href="#problem" className="btn-secondary text-base">See how it works</a>
+        </motion.div>
+      </motion.div>
+
+      {/* Scroll cue */}
+      {!reduce && (
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 1], y: [0, 8, 0] }}
+          transition={{ delay: 1, duration: 1.8, repeat: Infinity }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 text-slate-300"
+        >
+          <ChevronDown className="h-6 w-6" />
+        </motion.div>
+      )}
     </section>
   );
 }
 
-function StatCard({ value, label }) {
+/* ========================================================================== */
+/* Marquee — animated record band                                              */
+/* ========================================================================== */
+function Marquee() {
+  const reduce = useReducedMotion();
+  const items = ['9.58s · 100M WR', 'STRIDE MECHANICS', '33 BODY LANDMARKS', '19.19s · 200M WR',
+    'GROUND CONTACT TIME', 'ELITE COMPARISON', 'ANYWHERE ON EARTH'];
+  const row = [...items, ...items];
   return (
-    <div className="card-stat">
-      <div className="stat-number">{value}</div>
-      <div className="stat-label">{label}</div>
+    <div className="relative border-y border-white/10 bg-navy-900/60 py-4 overflow-hidden">
+      <motion.div
+        className="flex gap-10 whitespace-nowrap font-display text-2xl tracking-wider text-slate-400"
+        animate={reduce ? {} : { x: ['0%', '-50%'] }}
+        transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+      >
+        {row.map((t, i) => (
+          <span key={i} className="flex items-center gap-10">
+            {t} <span className="text-sprint-orange">/</span>
+          </span>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Slide 2 — The Problem                                                       */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/* Problem                                                                     */
+/* ========================================================================== */
 function Problem() {
   const items = [
-    { icon: '🌍', title: 'Geographic Bias',
+    { Icon: Globe2, title: 'Geographic Bias',
       body: 'Scouts concentrate on wealthy urban areas. Rural and developing regions are almost entirely ignored.' },
-    { icon: '💰', title: 'Cost Barrier',
+    { Icon: Wallet, title: 'Cost Barrier',
       body: 'Formal talent programs are expensive. Only families with resources can access proper training & exposure.' },
-    { icon: '👁', title: 'Human Subjectivity',
+    { Icon: Eye, title: 'Human Subjectivity',
       body: 'Coaches rely on gut feeling and visual cues. Many bio-mechanical gifts are invisible to the naked eye.' },
-    { icon: '⏳', title: 'Late Detection',
+    { Icon: Hourglass, title: 'Late Detection',
       body: "Most athletes are only 'discovered' at 16–18. Prime development windows at age 10–14 are lost forever." },
   ];
   return (
-    <section id="problem" className="section bg-navy-800/40 border-y border-white/5">
+    <section id="problem" className="section relative">
       <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader eyebrow="Slide 02 / 07" title="THE PROBLEM" accent="coral" />
-        <p className="mt-4 text-slate-300 italic max-w-3xl">
-          Every year, thousands of potential sprint champions go undiscovered — not because they
-          lack talent, but because the traditional scouting system is broken.
-        </p>
-        <div className="mt-10 grid md:grid-cols-2 gap-5">
-          {items.map((it) => (
-            <div key={it.title} className="card-bordered-coral">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">{it.icon}</span>
-                <h3 className="font-display text-2xl text-white">{it.title}</h3>
-              </div>
-              <p className="text-slate-300">{it.body}</p>
-            </div>
+        <SectionHeader eyebrow="The Problem" title="TALENT GOES UNSEEN" accent="coral" />
+        <Reveal delay={0.1}>
+          <p className="mt-5 text-slate-300 text-lg max-w-3xl">
+            Every year, thousands of potential sprint champions go undiscovered — not because they
+            lack talent, but because the traditional scouting system is broken.
+          </p>
+        </Reveal>
+        <Stagger className="mt-12 grid md:grid-cols-2 gap-5">
+          {items.map(({ Icon, title, body }) => (
+            <motion.div key={title} variants={staggerItem}>
+              <Tilt className="card-bordered-coral h-full">
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="grid place-items-center h-12 w-12 rounded-xl bg-sprint-coral/15 text-sprint-coral ring-1 ring-sprint-coral/30">
+                    <Icon className="h-6 w-6" strokeWidth={1.75} />
+                  </span>
+                  <h3 className="font-display text-2xl text-white tracking-wide">{title}</h3>
+                </div>
+                <p className="text-slate-300 leading-relaxed">{body}</p>
+              </Tilt>
+            </motion.div>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Slide 3 — The Scale of Missed Talent                                        */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/* Scale — metrics + image + quote                                             */
+/* ========================================================================== */
 function Scale() {
   const metrics = [
-    { v: '97%',     l: 'of sprint talent in Africa, Asia & South America never reaches a professional coach' },
-    { v: '~10K',    l: 'certified sprint scouts exist globally, yet 8 billion people live on Earth' },
-    { v: '4 Years', l: "average delay between an athlete's peak potential window and their first formal assessment" },
+    { v: '97%', l: 'of sprint talent in Africa, Asia & South America never reaches a professional coach' },
+    { v: '10K', l: 'certified sprint scouts exist globally, yet 8 billion people live on Earth' },
+    { v: '4 yrs', l: "average delay between an athlete's peak window and their first formal assessment" },
   ];
   return (
-    <section className="section">
+    <section className="section relative bg-navy-800/40 border-y border-white/5">
       <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader eyebrow="Slide 03 / 07" title="THE SCALE OF MISSED TALENT" accent="teal" />
-        <div className="mt-10 grid md:grid-cols-3 gap-5">
-          {metrics.map((m) => (
-            <div key={m.v} className="card-stat min-h-[220px]">
-              <div className="stat-number">{m.v}</div>
-              <div className="w-12 h-px bg-sprint-teal mt-3 mb-4" />
-              <div className="stat-label">{m.l}</div>
+        <SectionHeader eyebrow="The Scale" title="A WORLD OF MISSED POTENTIAL" accent="teal" />
+        <div className="mt-12 grid lg:grid-cols-2 gap-8 items-center">
+          <Stagger className="grid sm:grid-cols-3 gap-4">
+            {metrics.map((m) => (
+              <motion.div key={m.v} variants={staggerItem} className="card-stat min-h-[200px]">
+                <div className="stat-number"><CountUp value={m.v} /></div>
+                <div className="w-12 h-px bg-sprint-teal mt-3 mb-4" />
+                <div className="stat-label">{m.l}</div>
+              </motion.div>
+            ))}
+          </Stagger>
+          <Reveal delay={0.15}>
+            <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 aspect-[4/5] sm:aspect-video lg:aspect-[4/5]">
+              <img src={img('blurSide', { w: 1100 })} alt="A sprinter in full motion, captured with a panning blur"
+                   loading="lazy" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 scrim-bottom" />
+              <blockquote className="absolute bottom-0 p-6 md:p-8">
+                <p className="font-display text-2xl md:text-3xl text-white leading-tight">
+                  “The next Usain Bolt may be running barefoot in a village — and nobody will ever know.”
+                </p>
+                <footer className="mt-3 text-sprint-orange text-sm tracking-wide">
+                  The Untapped Potential Crisis
+                </footer>
+              </blockquote>
             </div>
-          ))}
-        </div>
-        <div className="mt-10 card border-l-4 border-l-sprint-orange">
-          <p className="text-lg md:text-xl italic text-slate-100 text-center">
-            “The next Usain Bolt may be running barefoot in a village somewhere — and nobody will ever know.”
-          </p>
-          <p className="mt-3 text-center text-sprint-orange text-sm">— The Untapped Athletic Potential Crisis</p>
+          </Reveal>
         </div>
       </div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Slide 4 — The Solution                                                      */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/* Solution                                                                    */
+/* ========================================================================== */
 function Solution() {
   const steps = [
-    { n: '01', title: 'Video Capture',       accent: 'teal',
-      body: 'Athlete films a 40m run on any smartphone. No lab or special equipment needed.' },
-    { n: '02', title: 'Pose Estimation AI',  accent: 'orange',
-      body: 'Computer vision extracts 33 body landmarks per frame — stride length, cadence, arm drive, ground contact time.' },
-    { n: '03', title: 'Talent Score',        accent: 'coral',
-      body: 'ML model compares biomechanical signature against elite athlete profiles to produce a potential score.' },
-    { n: '04', title: 'Personalized Feedback', accent: 'purple',
-      body: 'Athlete receives specific coaching tips, training plans, and drill recommendations instantly.' },
-    { n: '05', title: 'Global Talent Map',   accent: 'green',
-      body: 'Anonymized data builds a live world map of sprint potential, connecting athletes to scouts and programs.' },
-  ];
-  return (
-    <section className="section bg-gradient-to-b from-sprint-orange/[0.06] to-transparent border-y border-white/5">
-      <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader eyebrow="Slide 04 / 07" title="THE SOLUTION · SPRINT AI" accent="orange" />
-        <p className="mt-4 text-slate-300 max-w-3xl">
-          An AI-powered platform that uses computer vision, biomechanical analysis, and machine
-          learning to identify sprint potential anywhere in the world.
-        </p>
-        <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {steps.map((s) => (
-            <div key={s.n} className={`card-bordered-${s.accent}`}>
-              <div className="flex items-baseline gap-3 mb-3">
-                <span className={`font-display text-4xl text-sprint-${s.accent}`}>{s.n}</span>
-                <h3 className="font-display text-2xl text-white">{s.title}</h3>
-              </div>
-              <p className="text-slate-300">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Slide 5 — How It Works                                                      */
-/* -------------------------------------------------------------------------- */
-function HowItWorks() {
-  const flow = [
-    { icon: '📱', label: 'Record',  body: 'Film a short sprint on any phone',     color: 'orange' },
-    { icon: '☁️', label: 'Upload',  body: 'Video sent to AI cloud server',        color: 'teal'   },
-    { icon: '🤖', label: 'Analyze', body: 'Pose AI extracts 33 body keypoints',   color: 'orange' },
-    { icon: '📊', label: 'Score',   body: 'ML model produces talent score',       color: 'teal'   },
-    { icon: '🏆', label: 'Connect', body: 'Top athletes linked to coaches',       color: 'orange' },
-  ];
-  const measures = [
-    'Stride length & frequency', 'Ground contact time', 'Hip extension angle',
-    'Arm drive mechanics',       'Acceleration curve',  'Reaction time patterns',
-  ];
-  return (
-    <section className="section">
-      <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader eyebrow="Slide 05 / 07" title="HOW IT WORKS" accent="orange" />
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-6">
-          {flow.map((f, i) => (
-            <div key={f.label} className="flex flex-col items-center text-center">
-              <div className={`w-24 h-24 rounded-full bg-sprint-${f.color} flex items-center justify-center text-4xl shadow-xl`}>
-                {f.icon}
-              </div>
-              <h4 className="font-display text-2xl text-white mt-4">{f.label}</h4>
-              <p className="text-slate-400 text-sm mt-1">{f.body}</p>
-              {i < flow.length - 1 && (
-                <div className="hidden md:block absolute" aria-hidden />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 card border border-sprint-teal/40">
-          <h3 className="font-display text-2xl text-sprint-teal mb-4 tracking-wider">
-            WHAT THE AI MEASURES
-          </h3>
-          <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {measures.map((m) => (
-              <li key={m} className="flex items-center gap-2 text-slate-200">
-                <span className="text-sprint-orange">✦</span> {m}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Slide 6 — Expected Impact & Outcomes                                        */
-/* -------------------------------------------------------------------------- */
-function Impact() {
-  const outcomes = [
-    { t: 'Democratize Talent Access',  b: 'Any child, anywhere on earth, can be evaluated fairly using only a phone.' },
-    { t: 'Accelerate Development',     b: 'Early identification at age 10–12 allows years of proper coaching before peak performance age.' },
-    { t: 'Eliminate Bias',             b: 'AI evaluates biomechanics, not appearance, background, or coach relationships.' },
-    { t: 'Build National Programs',    b: 'Governments & athletics federations gain a data-driven pipeline for national squads.' },
-  ];
-  const stats = [
-    { v: '1M+', l: 'Athletes Assessed in Year One' },
-    { v: '80%', l: 'Cost Reduction vs Traditional Scouting' },
-    { v: '3×',  l: 'More Diverse Athlete Pipeline' },
-  ];
-  return (
-    <section className="section bg-sprint-green/[0.06] border-y border-white/5">
-      <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader eyebrow="Slide 06 / 07" title="EXPECTED IMPACT & OUTCOMES" accent="green" />
-        <div className="mt-10 grid lg:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            {outcomes.map((o) => (
-              <div key={o.t} className="card-bordered-green">
-                <h4 className="font-display text-2xl text-white">{o.t}</h4>
-                <p className="text-slate-300 mt-2">{o.b}</p>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {stats.map((s) => (
-              <div key={s.v} className="card-stat min-h-[160px]">
-                <div className="stat-number">{s.v}</div>
-                <div className="stat-label">{s.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Slide 7 — Conclusion & Next Steps                                           */
-/* -------------------------------------------------------------------------- */
-function Conclusion() {
-  const phases = [
-    { icon: '📐', t: 'Phase 1', b: 'Build & train the pose estimation model on sprint video datasets' },
-    { icon: '📱', t: 'Phase 2', b: 'Develop mobile app MVP and test with local athletics club' },
-    { icon: '🌍', t: 'Phase 3', b: 'Launch pilot in 3 countries, collect real athlete data' },
-    { icon: '🥇', t: 'Phase 4', b: 'Partner with national athletics federations for full rollout' },
+    { n: '01', Icon: Video, title: 'Video Capture', accent: 'teal',
+      body: 'Film a 40m run on any smartphone. No lab, no markers, no special equipment needed.' },
+    { n: '02', Icon: ScanLine, title: 'Pose Estimation', accent: 'orange',
+      body: 'Computer vision extracts 33 body landmarks per frame — stride, cadence, arm drive, contact time.' },
+    { n: '03', Icon: Gauge, title: 'Talent Score', accent: 'coral',
+      body: 'An ML model compares your biomechanical signature against elite athlete profiles.' },
+    { n: '04', Icon: MessageSquareText, title: 'Personalized Feedback', accent: 'purple',
+      body: 'Receive specific coaching cues, training plans, and drill recommendations instantly.' },
+    { n: '05', Icon: MapPinned, title: 'Global Talent Map', accent: 'green',
+      body: 'Anonymized data builds a live world map of potential, connecting athletes to programs.' },
   ];
   return (
     <section className="section relative">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sprint-coral via-sprint-orange to-sprint-teal" />
+      <div className="aurora -z-10 right-[-5%] top-[20%] h-80 w-80 bg-sprint-teal/15" aria-hidden />
       <div className="max-w-7xl mx-auto px-6">
-        <p className="section-eyebrow">Slide 07 / 07</p>
-        <h2 className="font-display text-5xl md:text-7xl text-white leading-none mt-3">
-          CONCLUSION &<br/>NEXT STEPS
-        </h2>
-        <div className="h-1 w-48 bg-sprint-orange mt-6" />
-        <p className="mt-6 text-slate-200 italic max-w-3xl">
-          Sprint AI tackles a real global problem: the systematic failure to discover athletic
-          talent. By combining computer vision and machine learning, we give every athlete —
-          regardless of where they were born — a fair chance to be seen.
-        </p>
-
-        <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {phases.map((p) => (
-            <div key={p.t} className="card text-center">
-              <div className="text-4xl">{p.icon}</div>
-              <h4 className="font-display text-2xl text-sprint-orange mt-2">{p.t}</h4>
-              <p className="text-slate-300 text-sm mt-2">{p.b}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-16 text-center">
-          <p className="text-sprint-teal text-sm tracking-[0.25em] uppercase mb-4">
-            Sprint AI — Finding Champions Everywhere
+        <SectionHeader eyebrow="The Solution" title="HOW SPRINT AI WORKS" accent="orange" />
+        <Reveal delay={0.1}>
+          <p className="mt-5 text-slate-300 text-lg max-w-3xl">
+            A platform that turns any phone into a biomechanics lab — computer vision, ML, and
+            elite benchmarking, working together to surface talent anywhere.
           </p>
-          <Link to="/register" className="btn-primary text-lg">
-            Start your assessment →
-          </Link>
+        </Reveal>
+        <Stagger className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {steps.map(({ n, Icon, title, body, accent }) => (
+            <motion.div key={n} variants={staggerItem}>
+              <Tilt className={`card-bordered-${accent} h-full`}>
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`grid place-items-center h-12 w-12 rounded-xl bg-sprint-${accent}/15 text-sprint-${accent} ring-1 ring-sprint-${accent}/30`}>
+                    <Icon className="h-6 w-6" strokeWidth={1.75} />
+                  </span>
+                  <span className={`font-display text-5xl text-sprint-${accent}/40 tnum`}>{n}</span>
+                </div>
+                <h3 className="font-display text-2xl text-white tracking-wide">{title}</h3>
+                <p className="text-slate-300 mt-2 leading-relaxed">{body}</p>
+              </Tilt>
+            </motion.div>
+          ))}
+        </Stagger>
+      </div>
+    </section>
+  );
+}
+
+/* ========================================================================== */
+/* How it works — flow + measures                                              */
+/* ========================================================================== */
+function HowItWorks() {
+  const flow = [
+    { Icon: Smartphone, label: 'Record', body: 'Film a short sprint on any phone' },
+    { Icon: UploadCloud, label: 'Upload', body: 'Securely sent to the AI engine' },
+    { Icon: Cpu, label: 'Analyze', body: 'Pose AI extracts 33 keypoints' },
+    { Icon: BarChart3, label: 'Score', body: 'ML produces a talent score' },
+    { Icon: Trophy, label: 'Connect', body: 'Top athletes linked to coaches' },
+  ];
+  const measures = [
+    'Stride length & frequency', 'Ground contact time', 'Hip extension angle',
+    'Arm drive mechanics', 'Acceleration curve', 'Reaction time patterns',
+  ];
+  return (
+    <section className="section relative bg-gradient-to-b from-sprint-orange/[0.05] to-transparent border-y border-white/5">
+      <div className="max-w-7xl mx-auto px-6">
+        <SectionHeader eyebrow="The Pipeline" title="FROM PHONE TO POTENTIAL" accent="orange" />
+        <Stagger className="mt-14 grid grid-cols-2 md:grid-cols-5 gap-6">
+          {flow.map(({ Icon, label, body }, i) => (
+            <motion.div key={label} variants={staggerItem} className="relative flex flex-col items-center text-center">
+              <div className="relative grid place-items-center h-20 w-20 rounded-2xl bg-navy-700 ring-1 ring-white/10 text-sprint-orange glow-orange">
+                <Icon className="h-9 w-9" strokeWidth={1.5} />
+                <span className="absolute -top-2 -right-2 grid place-items-center h-6 w-6 rounded-full bg-sprint-orange text-navy-900 text-xs font-bold tnum">{i + 1}</span>
+              </div>
+              <h4 className="font-display text-2xl text-white mt-4 tracking-wide">{label}</h4>
+              <p className="text-slate-400 text-sm mt-1">{body}</p>
+            </motion.div>
+          ))}
+        </Stagger>
+
+        <Reveal delay={0.1}>
+          <div className="mt-14 card ring-1 ring-sprint-teal/25">
+            <h3 className="font-display text-2xl text-sprint-teal mb-5 tracking-wider flex items-center gap-2">
+              <ScanLine className="h-6 w-6" /> WHAT THE AI MEASURES
+            </h3>
+            <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {measures.map((m) => (
+                <li key={m} className="flex items-center gap-3 text-slate-200">
+                  <span className="grid place-items-center h-8 w-8 rounded-lg bg-sprint-orange/15 text-sprint-orange shrink-0">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ========================================================================== */
+/* Impact                                                                      */
+/* ========================================================================== */
+function Impact() {
+  const outcomes = [
+    { Icon: Globe2, t: 'Democratize Access', b: 'Any child, anywhere on earth, can be evaluated fairly using only a phone.' },
+    { Icon: Rocket, t: 'Accelerate Development', b: 'Early identification at age 10–12 means years of proper coaching before peak age.' },
+    { Icon: ScaleIcon, t: 'Eliminate Bias', b: 'AI evaluates biomechanics — not appearance, background, or coach relationships.' },
+    { Icon: Building2, t: 'Build National Programs', b: 'Federations gain a data-driven pipeline for national squads.' },
+  ];
+  const stats = [
+    { v: '1M+', l: 'Athletes assessed in year one' },
+    { v: '80%', l: 'Cost reduction vs traditional scouting' },
+    { v: '3x', l: 'More diverse athlete pipeline' },
+  ];
+  return (
+    <section className="section relative bg-sprint-green/[0.05] border-y border-white/5">
+      <div className="max-w-7xl mx-auto px-6">
+        <SectionHeader eyebrow="The Impact" title="WHAT CHANGES" accent="green" />
+        <div className="mt-12 grid lg:grid-cols-2 gap-6">
+          <Stagger className="space-y-4">
+            {outcomes.map(({ Icon, t, b }) => (
+              <motion.div key={t} variants={staggerItem}>
+                <Tilt max={5} className="card-bordered-green flex items-start gap-4">
+                  <span className="grid place-items-center h-12 w-12 rounded-xl bg-sprint-green/15 text-sprint-green ring-1 ring-sprint-green/30 shrink-0">
+                    <Icon className="h-6 w-6" strokeWidth={1.75} />
+                  </span>
+                  <div>
+                    <h4 className="font-display text-2xl text-white tracking-wide">{t}</h4>
+                    <p className="text-slate-300 mt-1">{b}</p>
+                  </div>
+                </Tilt>
+              </motion.div>
+            ))}
+          </Stagger>
+          <Stagger className="grid sm:grid-cols-1 gap-4 content-start">
+            {stats.map((s) => (
+              <motion.div key={s.v} variants={staggerItem} className="card-stat flex-row gap-6 min-h-[120px] justify-start text-left">
+                <div className="stat-number"><CountUp value={s.v} /></div>
+                <div className="stat-label mt-0">{s.l}</div>
+              </motion.div>
+            ))}
+          </Stagger>
         </div>
       </div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Shared header                                                               */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/* Conclusion / CTA                                                            */
+/* ========================================================================== */
+function Conclusion() {
+  const phases = [
+    { Icon: DraftingCompass, t: 'Phase 1', b: 'Train the pose model on sprint video datasets' },
+    { Icon: Smartphone, t: 'Phase 2', b: 'Ship the mobile MVP, test with a local club' },
+    { Icon: Globe2, t: 'Phase 3', b: 'Launch a pilot in 3 countries, collect real data' },
+    { Icon: Medal, t: 'Phase 4', b: 'Partner with national federations for rollout' },
+  ];
+  return (
+    <section className="relative">
+      {/* CTA hero band with image */}
+      <div className="relative isolate overflow-hidden grain">
+        <img src={img('blurPan', { w: 2000 })} alt="A sprinter at top speed, panned against a blurred background"
+             loading="lazy" className="absolute inset-0 -z-10 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-navy-900/80" />
+        <div className="max-w-7xl mx-auto px-6 py-24 md:py-32 text-center">
+          <Reveal>
+            <h2 className="font-display text-5xl md:text-8xl text-white leading-[0.9]">
+              FIND CHAMPIONS<br /><span className="text-gradient">EVERYWHERE</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="mt-6 text-slate-200 text-lg max-w-2xl mx-auto">
+              Give every athlete — regardless of where they were born — a fair chance to be seen.
+            </p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <div className="mt-9 flex justify-center">
+              <Magnetic>
+                <Link to="/register" className="btn-primary text-lg">
+                  Start your assessment <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Magnetic>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+
+      {/* Roadmap */}
+      <div className="section max-w-7xl mx-auto px-6">
+        <SectionHeader eyebrow="The Roadmap" title="WHAT'S NEXT" accent="orange" />
+        <Stagger className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {phases.map(({ Icon, t, b }) => (
+            <motion.div key={t} variants={staggerItem}>
+              <Tilt className="card card-hover text-center h-full">
+                <span className="inline-grid place-items-center h-14 w-14 rounded-2xl bg-sprint-orange/15 text-sprint-orange ring-1 ring-sprint-orange/30 mx-auto">
+                  <Icon className="h-7 w-7" strokeWidth={1.5} />
+                </span>
+                <h4 className="font-display text-2xl text-sprint-orange mt-4 tracking-wide">{t}</h4>
+                <p className="text-slate-300 text-sm mt-2">{b}</p>
+              </Tilt>
+            </motion.div>
+          ))}
+        </Stagger>
+      </div>
+    </section>
+  );
+}
+
+/* ========================================================================== */
 function SectionHeader({ eyebrow, title, accent = 'orange' }) {
   const bar = {
-    coral:  'bg-sprint-coral',
-    teal:   'bg-sprint-teal',
-    orange: 'bg-sprint-orange',
-    green:  'bg-sprint-green',
-    purple: 'bg-sprint-purple',
+    coral: 'bg-sprint-coral', teal: 'bg-sprint-teal', orange: 'bg-sprint-orange',
+    green: 'bg-sprint-green', purple: 'bg-sprint-purple',
   }[accent];
   return (
-    <div>
-      <p className="section-eyebrow">{eyebrow}</p>
-      <h2 className="section-title mt-2">{title}</h2>
-      <div className={`h-1 w-24 mt-4 ${bar}`} />
-    </div>
+    <Reveal>
+      <p className="section-eyebrow"><span className={`inline-block h-2 w-2 rounded-full ${bar}`} />{eyebrow}</p>
+      <h2 className="section-title mt-3">{title}</h2>
+      <div className={`h-1 w-24 mt-5 rounded-full ${bar}`} />
+    </Reveal>
   );
 }

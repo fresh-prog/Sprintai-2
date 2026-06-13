@@ -75,3 +75,7 @@ pids/
 postgres-data/
 mongo-data/
 redis-data/
+
+# ====== Local dev tooling / scratch ======
+shots/
+.claude/launch.json

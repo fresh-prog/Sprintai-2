@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { RotateCw, FileJson, Sheet, FileText } from 'lucide-react';
 import api, { downloadAuthed } from '../services/api.js';
 import AngleChart from '../components/AngleChart.jsx';
 import MovementMap from '../components/MovementMap.jsx';
@@ -134,20 +135,21 @@ export default function SessionDetail() {
               disabled={reprocessing || summary.session.status === 'PROCESSING'}
               title="Re-run pose extraction + sprint analysis on the existing video"
             >
-              {reprocessing ? 'Queuing…' : '↻ Reprocess'}
+              <RotateCw className={`h-4 w-4 ${reprocessing ? 'animate-spin' : ''}`} />
+              {reprocessing ? 'Queuing…' : 'Reprocess'}
             </button>
           )}
           <button className="btn-secondary text-sm"
                   onClick={() => downloadAuthed(`/sessions/${id}/export?format=json`, `session-${id}.json`)}>
-            JSON
+            <FileJson className="h-4 w-4" /> JSON
           </button>
           <button className="btn-secondary text-sm"
                   onClick={() => downloadAuthed(`/sessions/${id}/export?format=csv`, `session-${id}-metrics.csv`)}>
-            CSV
+            <Sheet className="h-4 w-4" /> CSV
           </button>
           <button className="btn-primary text-sm"
                   onClick={() => downloadAuthed(`/sessions/${id}/report.pdf`, `session-${id}-report.pdf`)}>
-            PDF report
+            <FileText className="h-4 w-4" /> PDF report
           </button>
         </div>
       </header>
@@ -260,7 +262,7 @@ function DuplicateBanner({ onDismiss }) {
         <p className="font-display text-xl text-white">Duplicate upload — opened existing session</p>
         <p className="text-slate-400 text-sm mt-1">
           We detected the exact same video file you'd uploaded before, so we brought you to the
-          original session instead of re-processing it. Use <span className="text-sprint-teal">↻ Reprocess</span>
+          original session instead of re-processing it. Use <span className="text-sprint-teal">Reprocess</span>
           {' '}above if you want to re-run the analysis with the latest scoring rules.
         </p>
       </div>

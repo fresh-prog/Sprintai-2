@@ -3,29 +3,53 @@
 @tailwind utilities;
 
 @layer base {
-  html { font-family: 'Inter', system-ui, sans-serif; }
+  html { font-family: 'Inter', system-ui, sans-serif; scroll-behavior: smooth; }
   body {
     background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,166,35,0.10), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(30,197,197,0.08), transparent 60%),
-      #060c1c;
+      radial-gradient(ellipse 70% 50% at 50% -10%, rgba(245,166,35,0.12), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(30,197,197,0.10), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 0% 60%, rgba(139,92,246,0.07), transparent 60%),
+      #050a18;
     min-height: 100vh;
   }
   .font-display { font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 0.02em; }
+
+  /* Accessible focus ring on every interactive element (keyboard users). */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #1ec5c5;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Honor reduced-motion: kill non-essential animation/transition globally. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
   /* ---------- Buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-5 py-2.5 font-semibold
-           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold
+           transition-[transform,box-shadow,background-color,color,border-color] duration-200
+           ease-out disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-sprint-orange text-navy-900 hover:bg-sprint-orange-bright
-           shadow-lg shadow-sprint-orange/20 hover:shadow-sprint-orange/40;
+    @apply btn text-navy-900
+           bg-gradient-to-br from-sprint-orange-bright to-sprint-orange-deep
+           shadow-[0_10px_30px_-8px_rgba(245,166,35,0.5)]
+           hover:-translate-y-0.5 hover:shadow-[0_18px_44px_-10px_rgba(245,166,35,0.65)]
+           active:translate-y-0;
   }
   .btn-secondary {
-    @apply btn border border-sprint-teal/40 text-sprint-teal hover:bg-sprint-teal/10;
+    @apply btn border border-white/15 text-white bg-white/5 backdrop-blur
+           hover:bg-white/10 hover:border-white/30 hover:-translate-y-0.5 active:translate-y-0;
   }
   .btn-ghost {
     @apply btn text-slate-300 hover:text-white hover:bg-white/5;
@@ -33,41 +57,81 @@
 
   /* ---------- Cards ---------- */
   .card {
-    @apply rounded-2xl border border-white/10 bg-navy-700/60 backdrop-blur p-6
-           shadow-xl shadow-black/20;
+    @apply rounded-2xl border border-white/10 bg-navy-700/55 backdrop-blur-md p-6
+           shadow-[0_16px_40px_-20px_rgba(0,0,0,0.8)];
+  }
+  .card-hover {
+    @apply transition-[transform,border-color,box-shadow] duration-300 ease-out
+           hover:-translate-y-1 hover:border-white/25
+           hover:shadow-[0_30px_60px_-24px_rgba(0,0,0,0.9)];
   }
   .card-stat {
-    @apply card flex flex-col items-center justify-center text-center
-           border-sprint-teal/40 hover:border-sprint-teal transition-colors;
+    @apply card card-hover flex flex-col items-center justify-center text-center
+           border-sprint-teal/30 hover:border-sprint-teal/70;
   }
-  .card-bordered-coral { @apply card border-l-4 border-l-sprint-coral; }
-  .card-bordered-teal  { @apply card border-l-4 border-l-sprint-teal; }
-  .card-bordered-orange{ @apply card border-l-4 border-l-sprint-orange; }
-  .card-bordered-green { @apply card border-l-4 border-l-sprint-green; }
-  .card-bordered-purple{ @apply card border-l-4 border-l-sprint-purple; }
+  .card-bordered-coral { @apply card card-hover border-l-4 border-l-sprint-coral; }
+  .card-bordered-teal  { @apply card card-hover border-l-4 border-l-sprint-teal; }
+  .card-bordered-orange{ @apply card card-hover border-l-4 border-l-sprint-orange; }
+  .card-bordered-green { @apply card card-hover border-l-4 border-l-sprint-green; }
+  .card-bordered-purple{ @apply card card-hover border-l-4 border-l-sprint-purple; }
 
   /* ---------- Inputs ---------- */
   .input {
-    @apply w-full rounded-lg bg-navy-800 border border-white/10 px-3 py-2.5
-           text-slate-100 placeholder:text-slate-500
+    @apply w-full rounded-xl bg-navy-800/80 border border-white/10 px-4 py-3
+           text-slate-100 placeholder:text-slate-500 transition-colors
            focus:border-sprint-teal focus:ring-2 focus:ring-sprint-teal/30 outline-none;
   }
 
   /* ---------- Marketing chrome ---------- */
-  .section { @apply py-16 md:py-24; }
+  .section { @apply py-20 md:py-28; }
   .section-eyebrow {
-    @apply text-sprint-teal text-xs font-bold tracking-[0.25em] uppercase;
+    @apply inline-flex items-center gap-2 text-sprint-teal text-xs font-bold
+           tracking-[0.28em] uppercase;
   }
   .section-title {
-    @apply font-display text-4xl md:text-6xl text-white leading-none;
+    @apply font-display text-5xl md:text-7xl text-white leading-[0.95];
   }
   .stat-number {
-    @apply font-display text-5xl md:text-7xl text-sprint-orange leading-none;
+    @apply font-display text-5xl md:text-7xl text-sprint-orange leading-none tnum;
   }
-  .stat-label {
-    @apply text-slate-300 text-sm md:text-base mt-2 max-w-xs;
+  .stat-label { @apply text-slate-300 text-sm md:text-base mt-2 max-w-xs; }
+}
+
+@layer utilities {
+  /* Tabular figures: metrics/timers/prices never jitter as digits change. */
+  .tnum { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+  /* Animated gradient text for hero accents. */
+  .text-gradient {
+    @apply bg-clip-text text-transparent
+           bg-gradient-to-r from-sprint-orange-bright via-sprint-orange to-sprint-teal;
   }
-  .ribbon {
-    @apply absolute left-0 top-0 h-full w-1.5;
+
+  /* Soft glow halo behind hero elements. */
+  .glow-orange { box-shadow: 0 0 80px -20px rgba(245,166,35,0.6); }
+  .glow-teal { box-shadow: 0 0 80px -20px rgba(30,197,197,0.5); }
+
+  /* Image scrims to keep text legible over photos. */
+  .scrim-bottom {
+    background: linear-gradient(to top, rgba(5,10,24,0.96) 0%, rgba(5,10,24,0.55) 45%, rgba(5,10,24,0.15) 100%);
+  }
+  .scrim-left {
+    background: linear-gradient(to right, rgba(5,10,24,0.95) 0%, rgba(5,10,24,0.7) 40%, rgba(5,10,24,0.25) 100%);
+  }
+
+  /* Subtle film grain overlay for cinematic depth. */
+  .grain::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Animated aurora blobs for ambient motion behind sections. */
+  .aurora {
+    position: absolute; border-radius: 9999px; filter: blur(80px);
+    animation: drift 18s ease-in-out infinite;
+  }
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, -30px) scale(1.12); }
   }
 }
