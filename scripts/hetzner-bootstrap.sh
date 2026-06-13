@@ -42,9 +42,9 @@ cd "$APP_DIR"
 echo "==> 4/7 Generate .env with random secrets"
 bash scripts/setup.sh || true
 
-echo "==> 5/7 Derive free sslip.io domain from public IP; wire DOMAIN + CORS"
+echo "==> 5/7 Resolve DOMAIN (DEPLOY_DOMAIN override, else <ip>.sslip.io); wire CORS"
 IP="$(curl -fsSL https://api.ipify.org || curl -fsSL https://ifconfig.me || hostname -I | awk '{print $1}')"
-DOMAIN="${IP//./-}.sslip.io"
+DOMAIN="${DEPLOY_DOMAIN:-${IP//./-}.sslip.io}"
 set_env() { # key value
   if grep -q "^# *$1=" .env; then sed -i "s|^# *$1=.*|$1=$2|" .env;
   elif grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env;
