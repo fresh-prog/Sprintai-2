@@ -26,11 +26,12 @@ function Protected({ children, admin = false }) {
   return children;
 }
 
-// On `/`, show the marketing landing for guests and the dashboard for users.
+// On `/`, the marketing landing paints immediately (no auth-gate flash — it
+// needs no session). Once auth resolves, a logged-in user is sent to the app.
 function Home() {
   const { user, loading } = useAuthStore();
-  if (loading) return <div className="p-10 text-center text-slate-300">Loading…</div>;
-  return user ? <Navigate to="/dashboard" replace /> : <Landing />;
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  return <Landing />;
 }
 
 export default function App() {
