@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { MapPinned } from 'lucide-react';
 import api from '../services/api.js';
+import PageHeader from '../components/PageHeader.jsx';
 
 // Lightweight ISO alpha-2 → lat/lng table. Just the countries we actually
 // expect athletes from in v1 — extend as the cohort grows.
@@ -85,15 +87,9 @@ export default function TalentMap() {
   }, [rows]);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="section-eyebrow">Global Reach</p>
-        <h1 className="font-display text-5xl text-white mt-2">TALENT MAP</h1>
-        <p className="text-slate-300 mt-2 max-w-2xl">
-          Where athletes are being assessed and how their sprint scores compare. Each circle is
-          one country; size = athlete count, color = mean sprint score.
-        </p>
-      </header>
+    <div className="space-y-8">
+      <PageHeader icon={MapPinned} eyebrow="Global Reach" title="TALENT MAP" accent="green"
+        subtitle="Where athletes are being assessed and how their sprint scores compare. Each circle is one country; size = athlete count, color = mean sprint score." />
 
       <div ref={containerRef} className="card p-0 overflow-hidden" style={{ height: 540 }} />
 

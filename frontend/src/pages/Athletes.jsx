@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Users, UserPlus, FileUp } from 'lucide-react';
 import api from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
+import PageHeader from '../components/PageHeader.jsx';
+import { Stagger, staggerItem } from '../components/Motion.jsx';
 
 const EVENTS = [
   { id: 'S100M', label: '100m' },
@@ -31,27 +35,22 @@ export default function Athletes() {
 
   const canAdd = user?.role === 'COACH' || user?.role === 'ADMIN' || user?.role === 'ATHLETE';
 
+  const subtitle = user?.role === 'COACH' ? 'Your roster of sprinters.'
+    : user?.role === 'RESEARCHER' ? 'Anonymized athlete records you have access to.'
+    : 'Manage your athlete profile and sprint history.';
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="section-eyebrow">{roleLabel(user?.role)}</p>
-          <h1 className="font-display text-5xl text-white mt-2">ATHLETES</h1>
-          <p className="text-slate-300 mt-2 max-w-2xl">
-            {user?.role === 'COACH' ? 'Your roster of sprinters.'
-              : user?.role === 'RESEARCHER' ? 'Anonymized athlete records you have access to.'
-              : 'Manage your athlete profile and sprint history.'}
-          </p>
-        </div>
+    <div className="space-y-8">
+      <PageHeader icon={Users} eyebrow={roleLabel(user?.role)} title="ATHLETES" subtitle={subtitle}>
         {canAdd && (
-          <div className="flex gap-2">
+          <>
             <BulkUploadButton onUploaded={load} />
             <button className="btn-primary text-sm" onClick={() => setShowNew(true)}>
-              + Add athlete
+              <UserPlus className="h-4 w-4" /> Add athlete
             </button>
-          </div>
+          </>
         )}
-      </header>
+      </PageHeader>
 
       {loading ? (
         <p className="text-slate-400">Loading…</p>
@@ -59,15 +58,17 @@ export default function Athletes() {
         <div className="card text-center py-12">
           <p className="text-slate-300 mb-4">No athletes yet.</p>
           {canAdd && (
-            <button className="btn-primary" onClick={() => setShowNew(true)}>
-              Add your first athlete
+            <button className="btn-primary inline-flex" onClick={() => setShowNew(true)}>
+              <UserPlus className="h-5 w-5" /> Add your first athlete
             </button>
           )}
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {list.map((a) => <AthleteCard key={a.id} athlete={a} />)}
-        </div>
+        <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {list.map((a) => (
+            <motion.div key={a.id} variants={staggerItem}><AthleteCard athlete={a} /></motion.div>
+          ))}
+        </Stagger>
       )}
 
       {showNew && <NewAthleteModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); load(); }} />}
@@ -81,7 +82,7 @@ function AthleteCard({ athlete }) {
     : null;
   const ev = EVENTS.find((e) => e.id === athlete.primaryEvent)?.label ?? athlete.primaryEvent;
   return (
-    <div className="card hover:border-sprint-orange/40 transition">
+    <div className="card card-hover hover:border-sprint-orange/40">
       <div className="flex items-center justify-between mb-3">
         <div className="font-display text-2xl text-white">{athlete.fullName}</div>
         <span className="text-xs px-2 py-0.5 rounded bg-sprint-orange/15 text-sprint-orange border border-sprint-orange/30">
@@ -219,7 +220,7 @@ function BulkUploadButton({ onUploaded }) {
         disabled={busy}
         title="CSV columns: full_name, primary_event, date_of_birth, sex, height_cm, weight_kg, country, notes"
       >
-        {busy ? 'Importing…' : 'Import CSV'}
+        <FileUp className="h-4 w-4" /> {busy ? 'Importing…' : 'Import CSV'}
       </button>
       {result && (
         <div className="fixed inset-0 z-40 bg-black/70 flex items-center justify-center p-6"

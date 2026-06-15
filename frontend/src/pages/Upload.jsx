@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UploadCloud, FileVideo, ArrowRight } from 'lucide-react';
 import api from '../services/api.js';
+import PageHeader from '../components/PageHeader.jsx';
 
 const ACCEPTED = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo'];
 const ACCEPT_ATTR = '.mp4,.mov,.avi,.mkv,.webm';
@@ -82,15 +84,9 @@ export default function Upload() {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="section-eyebrow">Sprint Analysis</p>
-        <h1 className="font-display text-5xl text-white mt-2">UPLOAD A SPRINT</h1>
-        <p className="text-slate-300 mt-2 max-w-2xl">
-          Drop a video of a 100m or 200m run. We'll extract 33 body landmarks per frame,
-          identify sprint phases, and score the athlete against elite benchmarks.
-        </p>
-      </header>
+    <div className="space-y-8">
+      <PageHeader icon={UploadCloud} eyebrow="Sprint Analysis" title="UPLOAD A SPRINT"
+        subtitle="Drop a video of a 100m or 200m run. We extract 33 body landmarks per frame, identify sprint phases, and score the athlete against elite benchmarks." />
 
       <form onSubmit={submit} className="space-y-5 max-w-3xl">
         {/* Drop zone */}
@@ -114,6 +110,7 @@ export default function Upload() {
           />
           {file ? (
             <div>
+              <FileVideo className="h-10 w-10 mx-auto mb-3 text-sprint-orange" strokeWidth={1.5} />
               <p className="font-display text-3xl text-sprint-orange mb-2">{file.name}</p>
               <p className="text-slate-400 text-sm">
                 {(file.size / 1024 / 1024).toFixed(1)} MB · {file.type || 'video'}
@@ -122,6 +119,7 @@ export default function Upload() {
             </div>
           ) : (
             <div>
+              <UploadCloud className="h-12 w-12 mx-auto mb-3 text-slate-400" strokeWidth={1.25} />
               <p className="font-display text-3xl text-white">Drop video here</p>
               <p className="text-slate-400 mt-2">or click to browse</p>
               <p className="text-slate-500 text-xs mt-4">
@@ -168,7 +166,7 @@ export default function Upload() {
         {error && <p className="text-sprint-coral text-sm">{error}</p>}
 
         <button type="submit" className="btn-primary" disabled={!file || busy}>
-          {busy ? 'Uploading…' : 'Analyze sprint →'}
+          {busy ? 'Uploading…' : <>Analyze sprint <ArrowRight className="h-5 w-5" /></>}
         </button>
       </form>
     </div>

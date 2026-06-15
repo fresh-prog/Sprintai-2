@@ -1,6 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ListVideo, ArrowRight, CheckCircle2, Loader2, AlertCircle, Circle } from 'lucide-react';
 import api from '../services/api.js';
+import PageHeader from '../components/PageHeader.jsx';
+import { Reveal } from '../components/Motion.jsx';
+
+const STATUS = {
+  COMPLETED:  { icon: CheckCircle2, cls: 'bg-sprint-green/15 text-sprint-green border-sprint-green/30' },
+  PROCESSING: { icon: Loader2,      cls: 'bg-sprint-orange/15 text-sprint-orange border-sprint-orange/30', spin: true },
+  FAILED:     { icon: AlertCircle,  cls: 'bg-sprint-coral/15 text-sprint-coral border-sprint-coral/30' },
+  ACTIVE:     { icon: Circle,       cls: 'bg-sprint-teal/15 text-sprint-teal border-sprint-teal/30' },
+};
+
+function StatusBadge({ status }) {
+  const s = STATUS[status] ?? STATUS.ACTIVE;
+  const Icon = s.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${s.cls}`}>
+      <Icon className={`h-3.5 w-3.5 ${s.spin ? 'animate-spin' : ''}`} /> {status}
+    </span>
+  );
+}
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
@@ -13,21 +33,19 @@ export default function Sessions() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="section-eyebrow">All Recordings</p>
-        <h1 className="font-display text-5xl text-white mt-2">SESSIONS</h1>
-      </header>
+    <div className="space-y-8">
+      <PageHeader icon={ListVideo} eyebrow="All Recordings" title="SESSIONS"
+        subtitle="Every sprint you have captured or uploaded, newest first." />
 
       {loading ? (
         <p className="text-slate-400">Loading…</p>
       ) : sessions.length === 0 ? (
-        <div className="card text-center py-12">
+        <Reveal><div className="card text-center py-12">
           <p className="text-slate-300 mb-4">No sessions recorded yet.</p>
-          <Link to="/capture" className="btn-primary">Record your first sprint →</Link>
-        </div>
+          <Link to="/capture" className="btn-primary inline-flex">Record your first sprint <ArrowRight className="h-5 w-5" /></Link>
+        </div></Reveal>
       ) : (
-        <div className="card p-0 overflow-hidden">
+        <Reveal className="card p-0 overflow-hidden">
           <table className="min-w-full text-sm">
             <thead className="bg-navy-800/60 text-slate-400 uppercase text-xs tracking-wider">
               <tr>
@@ -52,12 +70,12 @@ export default function Sessions() {
                       {s.source}
                     </span>
                   </td>
-                  <td className="p-4 text-slate-300">{s.status}</td>
+                  <td className="p-4"><StatusBadge status={s.status} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Reveal>
       )}
     </div>
   );

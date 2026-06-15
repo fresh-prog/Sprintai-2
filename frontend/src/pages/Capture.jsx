@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { Video, ArrowRight } from 'lucide-react';
+import PageHeader from '../components/PageHeader.jsx';
 import { useWebcam } from '../hooks/useWebcam.js';
 import { usePoseDetector } from '../hooks/usePoseDetector.js';
 import { drawSkeleton } from '../utils/skeleton.js';
@@ -81,23 +83,15 @@ export default function Capture() {
   }, [sessionId, camReady, poseReady, detect, videoRef]);
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="section-eyebrow">Sprint Capture</p>
-        <h1 className="font-display text-3xl sm:text-5xl text-white">LIVE CAPTURE</h1>
-        <p className="text-slate-300 text-sm sm:text-base max-w-2xl">
-          Film a 40m run — we extract 33 body landmarks per frame for biomechanical scoring.
-        </p>
-        <div className="flex flex-wrap gap-2 pt-1">
-          {sessionId
-            ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
-            : <button onClick={startSession}
-                      className="btn-primary text-sm w-full sm:w-auto"
-                      disabled={!camReady || !poseReady}>
-                {camReady && poseReady ? 'Start session →' : 'Loading…'}
-              </button>}
-        </div>
-      </header>
+    <div className="space-y-8">
+      <PageHeader icon={Video} eyebrow="Sprint Capture" title="LIVE CAPTURE" accent="teal"
+        subtitle="Film a 40m run — we extract 33 body landmarks per frame for biomechanical scoring.">
+        {sessionId
+          ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
+          : <button onClick={startSession} className="btn-primary text-sm" disabled={!camReady || !poseReady}>
+              {camReady && poseReady ? <>Start session <ArrowRight className="h-4 w-4" /></> : 'Loading…'}
+            </button>}
+      </PageHeader>
 
       {/* Video frame: scales to fit screen; fixed aspect ratio. */}
       <div className="relative w-full max-w-3xl rounded-2xl overflow-hidden border border-sprint-teal/30 shadow-2xl shadow-black/40"
