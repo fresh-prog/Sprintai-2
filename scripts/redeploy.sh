@@ -18,8 +18,17 @@ set_env() { # key value
   else echo "$1=$2" >> .env; fi
 }
 
-# Keep bcrypt at the faster setting; apply admin creds if provided.
+# Keep bcrypt at the faster setting.
 set_env BCRYPT_ROUNDS "${BCRYPT_ROUNDS:-10}"
+
+# Ensure an admin account exists. If creds aren't already in .env (and none
+# passed via env), generate a strong password and print it once.
+CUR_ADMIN_PW="$(grep -E '^ADMIN_PASSWORD=' .env | cut -d= -f2- || true)"
+if [ -z "${ADMIN_PASSWORD:-}" ] && [ -z "$CUR_ADMIN_PW" ]; then
+  ADMIN_EMAIL="${ADMIN_EMAIL:-admin@sprintai.app}"
+  ADMIN_PASSWORD="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)"
+  GENERATED=1
+fi
 [ -n "${ADMIN_EMAIL:-}" ]    && set_env ADMIN_EMAIL    "$ADMIN_EMAIL"
 [ -n "${ADMIN_PASSWORD:-}" ] && set_env ADMIN_PASSWORD "$ADMIN_PASSWORD"
 
@@ -34,4 +43,12 @@ echo "==> applying"
 docker compose $BASE up -d
 
 docker compose $BASE ps
+echo
 echo "Redeploy complete — cert and database preserved."
+if [ "${GENERATED:-0}" = "1" ]; then
+  echo "============================================================"
+  echo " ADMIN ACCOUNT (save this — shown once):"
+  echo "   email:    $ADMIN_EMAIL"
+  echo "   password: $ADMIN_PASSWORD"
+  echo "============================================================"
+fi
