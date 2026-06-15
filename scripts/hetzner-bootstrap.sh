@@ -54,6 +54,13 @@ set_env DOMAIN "$DOMAIN"
 set_env CORS_ORIGIN "https://$DOMAIN"
 echo "Public IP: $IP   Domain: $DOMAIN"
 
+# Optional admin seed — credentials passed from cloud-init deploy env.
+if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
+  set_env ADMIN_EMAIL "$ADMIN_EMAIL"
+  set_env ADMIN_PASSWORD "$ADMIN_PASSWORD"
+  echo "Admin account will be seeded for $ADMIN_EMAIL"
+fi
+
 echo "==> 6/7 Build images sequentially (avoids OOM during parallel builds)"
 for svc in ml biomech backend frontend; do
   echo "---- building $svc ----"

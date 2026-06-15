@@ -14,11 +14,15 @@ import { attachSockets } from './sockets/index.js';
 import { startPoseConsumer } from './sockets/poseConsumer.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
+import { seedAdmin } from './config/seed.js';
 
 const app = buildApp();
 const server = http.createServer(app);
 const io = attachSockets(server);
 startPoseConsumer(io);
+
+// Seed the admin account (no-op unless ADMIN_EMAIL/ADMIN_PASSWORD are set).
+seedAdmin().catch((err) => logger.error({ err: err.message }, 'admin seed error'));
 
 server.listen(env.BACKEND_PORT, () => {
   logger.info({ port: env.BACKEND_PORT, env: env.NODE_ENV }, 'sprintai backend listening');

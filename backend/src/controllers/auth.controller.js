@@ -19,8 +19,9 @@ function setRefreshCookie(req, res, raw, expiresAt) {
 }
 
 export async function register(req, res) {
-  const user = await authService.register(req.body);
-  res.status(201).json({ user });
+  const { accessToken, refresh, user } = await authService.register(req.body);
+  setRefreshCookie(req, res, refresh.raw, refresh.expiresAt);
+  res.status(201).json({ accessToken, user });
 }
 
 export async function login(req, res) {
@@ -32,9 +33,9 @@ export async function login(req, res) {
 export async function refresh(req, res) {
   const raw = req.cookies[REFRESH_COOKIE];
   if (!raw) throw Unauthorized('No refresh token');
-  const { accessToken, refresh: next } = await authService.refresh(raw);
+  const { accessToken, refresh: next, user } = await authService.refresh(raw);
   setRefreshCookie(req, res, next.raw, next.expiresAt);
-  res.json({ accessToken });
+  res.json({ accessToken, user });
 }
 
 export async function logout(req, res) {

@@ -11,7 +11,13 @@ const schema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be ≥ 16 chars'),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
-  BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+  // 10 is the OWASP-recommended floor and ~4x faster than 12 — important on
+  // small shared-CPU hosts where bcrypt(12) was costing ~750ms per call.
+  BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(10),
+
+  // Optional admin seed: if both are set, an ADMIN user is upserted on boot.
+  ADMIN_EMAIL: z.string().email().optional().or(z.literal('')),
+  ADMIN_PASSWORD: z.string().min(8).optional().or(z.literal('')),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),

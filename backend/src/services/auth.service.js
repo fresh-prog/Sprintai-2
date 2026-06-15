@@ -15,7 +15,11 @@ export async function register({ email, password, displayName }) {
   const user = await prisma.user.create({
     data: { email, passwordHash, displayName },
   });
-  return publicUser(user);
+  // Issue tokens immediately so the client is signed in from one round-trip —
+  // no separate /login call (which would mean a second bcrypt + RTT).
+  const accessToken = signAccessToken(user);
+  const refresh = await issueRefreshToken(user.id);
+  return { accessToken, refresh, user: publicUser(user) };
 }
 
 export async function login({ email, password }) {
@@ -36,5 +40,7 @@ export async function refresh(rawToken) {
   if (!user) throw Unauthorized('User no longer exists');
   const accessToken = signAccessToken(user);
   const next = await issueRefreshToken(user.id);
-  return { accessToken, refresh: next };
+  // Return the user too so the client can bootstrap in a single round-trip
+  // instead of following up with /auth/me on every page load.
+  return { accessToken, refresh: next, user: publicUser(user) };
 }
