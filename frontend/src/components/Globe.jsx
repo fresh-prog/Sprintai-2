@@ -96,7 +96,16 @@ function Earth() {
   return (
     <mesh>
       <sphereGeometry args={[R, 64, 64]} />
-      <meshPhongMaterial map={tex} shininess={4} specular="#10243f" />
+      {/* emissiveMap lifts the whole globe — including the side facing away
+          from the light — so the dark-earth texture reads brighter. */}
+      <meshPhongMaterial
+        map={tex}
+        emissiveMap={tex}
+        emissive="#ffffff"
+        emissiveIntensity={0.45}
+        shininess={6}
+        specular="#16304f"
+      />
     </mesh>
   );
 }
@@ -140,8 +149,8 @@ export default function Globe({ markers = [], height = 460 }) {
         frameloop={reduced ? 'demand' : 'always'}
         onPointerMissed={() => setSelected(null)}
       >
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[5, 3, 5]} intensity={1.4} />
+        <ambientLight intensity={1.4} />
+        <directionalLight position={[5, 3, 5]} intensity={1.7} />
         <Suspense fallback={null}>
           <Spinner enabled={!reduced && selected == null}>
             <Earth />
