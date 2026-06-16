@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "prisma migrate deploy && nodemon --watch src --ext js,json src/server.js",
-    "start": "prisma migrate deploy && node src/server.js",
+    "start": "prisma generate && prisma migrate deploy && node src/server.js",
     "lint": "eslint src",
     "test": "vitest run",
     "test:watch": "vitest",
