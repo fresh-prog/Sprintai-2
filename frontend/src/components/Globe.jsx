@@ -92,19 +92,19 @@ function Marker({ marker, maxSessions, selected, onSelect }) {
 }
 
 function Earth() {
-  const tex = useTexture('/textures/earth-dark.jpg');
+  const tex = useTexture('/textures/earth-blue-marble.jpg');
   return (
     <mesh>
       <sphereGeometry args={[R, 64, 64]} />
-      {/* emissiveMap lifts the whole globe — including the side facing away
-          from the light — so the dark-earth texture reads brighter. */}
+      {/* Bright daytime "blue marble" earth. A gentle emissiveMap keeps the
+          shadowed side from going dark as the globe revolves. */}
       <meshPhongMaterial
         map={tex}
         emissiveMap={tex}
         emissive="#ffffff"
-        emissiveIntensity={0.45}
-        shininess={6}
-        specular="#16304f"
+        emissiveIntensity={0.3}
+        shininess={8}
+        specular="#2a4a6a"
       />
     </mesh>
   );
@@ -149,8 +149,8 @@ export default function Globe({ markers = [], height = 460 }) {
         frameloop={reduced ? 'demand' : 'always'}
         onPointerMissed={() => setSelected(null)}
       >
-        <ambientLight intensity={1.4} />
-        <directionalLight position={[5, 3, 5]} intensity={1.7} />
+        <ambientLight intensity={1.1} />
+        <directionalLight position={[5, 3, 5]} intensity={1.5} />
         <Suspense fallback={null}>
           <Spinner enabled={!reduced && selected == null}>
             <Earth />
