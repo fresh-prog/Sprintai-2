@@ -3,9 +3,15 @@ import { Forbidden, NotFound } from '../utils/errors.js';
 import { finalizeSession } from './sessionFinalizer.service.js';
 import { logger } from '../config/logger.js';
 
-export async function createSession(userId, { label, source, meta }) {
+export async function createSession(userId, { label, source, meta, country }) {
   return prisma.session.create({
-    data: { userId, label, source, meta: meta ?? {} },
+    data: {
+      userId,
+      label,
+      source,
+      meta: meta ?? {},
+      country: country ? country.toUpperCase() : null,
+    },
   });
 }
 

@@ -3,6 +3,9 @@ import { z } from 'zod';
 export const createSessionSchema = z.object({
   label: z.string().min(1).max(120),
   source: z.enum(['WEBCAM', 'UPLOAD']),
+  // ISO 3166-1 alpha-2 of where the run is performed (e.g. "UG"). Optional —
+  // drives the Global Talent Map marker. Normalised to upper-case server-side.
+  country: z.string().trim().length(2).optional(),
   meta: z.record(z.any()).optional(),
 });
 

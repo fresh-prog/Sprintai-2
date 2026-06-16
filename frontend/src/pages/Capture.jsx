@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Video, ArrowRight } from 'lucide-react';
+import { Video, ArrowRight, Globe2 } from 'lucide-react';
 import PageHeader from '../components/PageHeader.jsx';
+import CountrySelect from '../components/CountrySelect.jsx';
+import { countryName } from '../lib/countries.js';
 import { useWebcam } from '../hooks/useWebcam.js';
 import { usePoseDetector } from '../hooks/usePoseDetector.js';
 import { drawSkeleton } from '../utils/skeleton.js';
@@ -11,12 +13,15 @@ import api from '../services/api.js';
 const WIDTH = 640;
 const HEIGHT = 480;
 const WINDOW_SIZE = 8;
+const COUNTRY_KEY = 'sprintai.captureCountry';
 
 export default function Capture() {
   const { videoRef, ready: camReady } = useWebcam({ width: WIDTH, height: HEIGHT });
   const { ready: poseReady, detect } = usePoseDetector();
   const canvasRef = useRef(null);
   const [sessionId, setSessionId] = useState(null);
+  // Remember the athlete's last country so they don't reselect every run.
+  const [country, setCountry] = useState(() => localStorage.getItem(COUNTRY_KEY) || '');
   const [posture, setPosture] = useState(null);
   const [activity, setActivity] = useState(null);
   const [liveAngles, setLiveAngles] = useState(null);
@@ -26,8 +31,17 @@ export default function Capture() {
   const rafRef = useRef(null);
   const lastLocalPredAt = useRef(0);
 
+  function pickCountry(code) {
+    setCountry(code);
+    if (code) localStorage.setItem(COUNTRY_KEY, code);
+  }
+
   async function startSession() {
-    const { data } = await api.post('/sessions', { label: `Capture ${new Date().toLocaleString()}`, source: 'WEBCAM' });
+    const { data } = await api.post('/sessions', {
+      label: `Capture ${new Date().toLocaleString()}`,
+      source: 'WEBCAM',
+      ...(country ? { country } : {}),
+    });
     setSessionId(data.id);
     const sock = connectPoseSocket();
     sock.on('connect', () => sock.emit('session:join', { sessionId: data.id }));
@@ -88,10 +102,28 @@ export default function Capture() {
         subtitle="Film a 40m run — we extract 33 body landmarks per frame for biomechanical scoring.">
         {sessionId
           ? <button onClick={stopSession} className="btn-secondary text-sm">Stop session</button>
-          : <button onClick={startSession} className="btn-primary text-sm" disabled={!camReady || !poseReady}>
+          : <button onClick={startSession} className="btn-primary text-sm" disabled={!camReady || !poseReady || !country}>
               {camReady && poseReady ? <>Start session <ArrowRight className="h-4 w-4" /></> : 'Loading…'}
             </button>}
       </PageHeader>
+
+      {/* Pre-flight: choose where this run is happening so it lands on the
+          Global Talent Map. Once recording, this collapses to a confirmation. */}
+      {sessionId ? (
+        country && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-sprint-teal/30 bg-sprint-teal/10 px-3 py-1.5 text-sm text-sprint-teal">
+            <Globe2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            Recording from <span className="font-semibold">{countryName(country)}</span> — your run joins the Talent Map.
+          </div>
+        )
+      ) : (
+        <div className="card max-w-md">
+          <CountrySelect id="capture-country" value={country} onChange={pickCountry} />
+          {!country && (
+            <p className="text-xs text-sprint-orange mt-2">Pick a country to enable Start session.</p>
+          )}
+        </div>
+      )}
 
       {/* Video frame: scales to fit screen; fixed aspect ratio. */}
       <div className="relative w-full max-w-3xl rounded-2xl overflow-hidden border border-sprint-teal/30 shadow-2xl shadow-black/40"

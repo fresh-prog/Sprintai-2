@@ -142,6 +142,10 @@ model Session {
   label       String
   source      SessionSource
   status      SessionStatus  @default(ACTIVE)
+  // ISO 3166-1 alpha-2 of where the run was performed. Captured at session
+  // start so the Global Talent Map can plot the country without needing a
+  // full athlete profile. Falls back to the athlete's country when null.
+  country     String?
   startedAt   DateTime       @default(now()) @map("started_at") @db.Timestamptz()
   endedAt     DateTime?      @map("ended_at") @db.Timestamptz()
   meta        Json           @default("{}")
@@ -154,6 +158,7 @@ model Session {
 
   @@index([userId, startedAt(sort: Desc)])
   @@index([athleteId, startedAt(sort: Desc)])
+  @@index([country])
   @@map("session")
 }
 

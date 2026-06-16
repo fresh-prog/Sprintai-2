@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { UploadCloud, FileVideo, ArrowRight } from 'lucide-react';
 import api from '../services/api.js';
 import PageHeader from '../components/PageHeader.jsx';
+import CountrySelect from '../components/CountrySelect.jsx';
+
+const COUNTRY_KEY = 'sprintai.captureCountry';
 
 const ACCEPTED = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo'];
 const ACCEPT_ATTR = '.mp4,.mov,.avi,.mkv,.webm';
@@ -21,7 +24,13 @@ export default function Upload() {
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [event, setEvent] = useState('S100M');
+  const [country, setCountry] = useState(() => localStorage.getItem(COUNTRY_KEY) || '');
   const [label, setLabel] = useState('');
+
+  function pickCountry(code) {
+    setCountry(code);
+    if (code) localStorage.setItem(COUNTRY_KEY, code);
+  }
   const [drag, setDrag] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
@@ -57,6 +66,7 @@ export default function Upload() {
       const { data: session } = await api.post('/sessions', {
         label: label || file.name,
         source: 'UPLOAD',
+        ...(country ? { country } : {}),
         meta: { event, originalName: file.name, size: file.size, mime: file.type },
       });
 
@@ -132,8 +142,9 @@ export default function Upload() {
         {/* Metadata */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-2">Label</label>
+            <label htmlFor="upload-label" className="block text-sm text-slate-400 mb-2">Label</label>
             <input
+              id="upload-label"
               className="input"
               placeholder="e.g. 100m time trial, May 2026"
               value={label}
@@ -141,12 +152,21 @@ export default function Upload() {
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-2">Event</label>
-            <select className="input" value={event} onChange={(e) => setEvent(e.target.value)}>
+            <label htmlFor="upload-event" className="block text-sm text-slate-400 mb-2">Event</label>
+            <select id="upload-event" className="input" value={event} onChange={(e) => setEvent(e.target.value)}>
               {EVENTS.map((ev) => (
                 <option key={ev.id} value={ev.id}>{ev.label}</option>
               ))}
             </select>
+          </div>
+          <div className="md:col-span-2">
+            <CountrySelect
+              id="upload-country"
+              value={country}
+              onChange={pickCountry}
+              label="Country where the run was performed"
+              hint="Optional — places this sprint on the Global Talent Map."
+            />
           </div>
         </div>
 
