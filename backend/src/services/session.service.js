@@ -3,7 +3,7 @@ import { Forbidden, NotFound } from '../utils/errors.js';
 import { finalizeSession } from './sessionFinalizer.service.js';
 import { logger } from '../config/logger.js';
 
-export async function createSession(userId, { label, source, meta, country }) {
+export async function createSession(userId, { label, source, meta, country, publicRanking }) {
   return prisma.session.create({
     data: {
       userId,
@@ -11,6 +11,9 @@ export async function createSession(userId, { label, source, meta, country }) {
       source,
       meta: meta ?? {},
       country: country ? country.toUpperCase() : null,
+      // Only honour the opt-in when a country is actually supplied — a public
+      // marker with no country is meaningless.
+      publicRanking: Boolean(publicRanking) && Boolean(country),
     },
   });
 }

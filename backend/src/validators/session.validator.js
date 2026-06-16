@@ -6,6 +6,9 @@ export const createSessionSchema = z.object({
   // ISO 3166-1 alpha-2 of where the run is performed (e.g. "UG"). Optional —
   // drives the Global Talent Map marker. Normalised to upper-case server-side.
   country: z.string().trim().length(2).optional(),
+  // Explicit opt-in to appear (anonymously, aggregated by country) on the
+  // public Global Talent Map. Defaults false when omitted.
+  publicRanking: z.boolean().optional(),
   meta: z.record(z.any()).optional(),
 });
 

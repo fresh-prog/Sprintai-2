@@ -25,6 +25,7 @@ export default function Upload() {
   const [file, setFile] = useState(null);
   const [event, setEvent] = useState('S100M');
   const [country, setCountry] = useState(() => localStorage.getItem(COUNTRY_KEY) || '');
+  const [publicRanking, setPublicRanking] = useState(true);
   const [label, setLabel] = useState('');
 
   function pickCountry(code) {
@@ -66,7 +67,7 @@ export default function Upload() {
       const { data: session } = await api.post('/sessions', {
         label: label || file.name,
         source: 'UPLOAD',
-        ...(country ? { country } : {}),
+        ...(country ? { country, publicRanking } : {}),
         meta: { event, originalName: file.name, size: file.size, mime: file.type },
       });
 
@@ -165,7 +166,9 @@ export default function Upload() {
               value={country}
               onChange={pickCountry}
               label="Country where the run was performed"
-              hint="Optional — places this sprint on the Global Talent Map."
+              hint="Optional — used to place this sprint on the Global Talent Map."
+              consent={publicRanking}
+              onConsentChange={setPublicRanking}
             />
           </div>
         </div>

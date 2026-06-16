@@ -1,3 +1,5 @@
+import path from 'node:path';
+import fs from 'node:fs';
 import { Router } from 'express';
 import multer from 'multer';
 import * as ctrl from '../controllers/session.controller.js';
@@ -11,8 +13,22 @@ import { env } from '../config/env.js';
 const r = Router();
 r.use(requireAuth);
 
+// Stream uploads straight to disk (a temp file under UPLOAD_DIR) instead of
+// buffering the whole video in memory — a 200 MB in-RAM buffer per request is
+// an easy way to OOM a small host under a few concurrent uploads.
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      const dir = path.join(env.UPLOAD_DIR, 'tmp');
+      fs.mkdir(dir, { recursive: true }, (err) => cb(err, dir));
+    },
+    // Random temp name; the final, content-addressed name is assigned in
+    // upload.service once we've hashed the bytes.
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '') || '.mp4';
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    },
+  }),
   limits: { fileSize: env.UPLOAD_MAX_MB * 1024 * 1024 },
 });
 

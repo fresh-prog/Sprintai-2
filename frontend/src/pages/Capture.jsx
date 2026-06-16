@@ -22,6 +22,7 @@ export default function Capture() {
   const [sessionId, setSessionId] = useState(null);
   // Remember the athlete's last country so they don't reselect every run.
   const [country, setCountry] = useState(() => localStorage.getItem(COUNTRY_KEY) || '');
+  const [publicRanking, setPublicRanking] = useState(true);
   const [posture, setPosture] = useState(null);
   const [activity, setActivity] = useState(null);
   const [liveAngles, setLiveAngles] = useState(null);
@@ -40,7 +41,7 @@ export default function Capture() {
     const { data } = await api.post('/sessions', {
       label: `Capture ${new Date().toLocaleString()}`,
       source: 'WEBCAM',
-      ...(country ? { country } : {}),
+      ...(country ? { country, publicRanking } : {}),
     });
     setSessionId(data.id);
     const sock = connectPoseSocket();
@@ -113,12 +114,14 @@ export default function Capture() {
         country && (
           <div className="inline-flex items-center gap-2 rounded-full border border-sprint-teal/30 bg-sprint-teal/10 px-3 py-1.5 text-sm text-sprint-teal">
             <Globe2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-            Recording from <span className="font-semibold">{countryName(country)}</span> — your run joins the Talent Map.
+            Recording from <span className="font-semibold">{countryName(country)}</span>
+            {publicRanking ? ' — your run joins the Talent Map.' : ' — kept private.'}
           </div>
         )
       ) : (
         <div className="card max-w-md">
-          <CountrySelect id="capture-country" value={country} onChange={pickCountry} />
+          <CountrySelect id="capture-country" value={country} onChange={pickCountry}
+            consent={publicRanking} onConsentChange={setPublicRanking} />
           {!country && (
             <p className="text-xs text-sprint-orange mt-2">Pick a country to enable Start session.</p>
           )}

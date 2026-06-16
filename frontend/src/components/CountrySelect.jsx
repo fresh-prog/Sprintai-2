@@ -10,8 +10,13 @@ export default function CountrySelect({
   onChange,
   disabled = false,
   label = 'Where are you sprinting?',
-  hint = 'Tags this run on the Global Talent Map.',
+  hint = 'Used to place this run on the Global Talent Map.',
+  // When provided, render a disclosed opt-in consent checkbox. The map shows
+  // only country + aggregate score — never a name — and only for opted-in runs.
+  consent,
+  onConsentChange,
 }) {
+  const showConsent = typeof onConsentChange === 'function';
   return (
     <div>
       <label htmlFor={id} className="block text-sm text-slate-300 mb-1.5 font-medium">
@@ -34,6 +39,26 @@ export default function CountrySelect({
         </select>
       </div>
       {hint && <p className="text-xs text-slate-500 mt-1.5">{hint}</p>}
+
+      {showConsent && (
+        <label htmlFor={`${id}-consent`}
+          className="mt-3 flex items-start gap-2.5 text-sm text-slate-300 cursor-pointer select-none">
+          <input
+            id={`${id}-consent`}
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-sprint-teal"
+            checked={Boolean(consent)}
+            disabled={disabled || !value}
+            onChange={(e) => onConsentChange(e.target.checked)}
+          />
+          <span>
+            Show this run on the public Talent Map
+            <span className="block text-xs text-slate-500">
+              Shares your country and sprint score only — never your name. Uncheck to keep it private.
+            </span>
+          </span>
+        </label>
+      )}
     </div>
   );
 }

@@ -7,8 +7,8 @@ const schema = z.object({
   BACKEND_PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
-  JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET must be ≥ 16 chars'),
-  JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be ≥ 16 chars'),
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be ≥ 32 chars'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be ≥ 32 chars'),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
   // 10 is the OWASP-recommended floor and ~4x faster than 12 — important on
@@ -30,6 +30,11 @@ const schema = z.object({
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
   RATE_LIMIT_MAX: z.coerce.number().default(120),
+
+  // Privacy floor for the public Talent Map: suppress any country with fewer
+  // than this many distinct opted-in athletes, so small cohorts can't be
+  // de-anonymised. 1 = no suppression (every opted-in country shows).
+  TALENT_MAP_MIN_ATHLETES: z.coerce.number().int().min(1).default(1),
 });
 
 const parsed = schema.safeParse(process.env);

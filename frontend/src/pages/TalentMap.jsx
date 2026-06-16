@@ -66,7 +66,8 @@ export default function TalentMap() {
         <div className="card text-center py-10">
           <p className="text-slate-300">No country-tagged sessions yet.</p>
           <p className="text-slate-500 text-sm mt-1">
-            Record or upload a sprint and choose your country — it appears here within moments.
+            Record or upload a sprint, choose your country, and leave “Show on the Talent Map”
+            checked — it appears here within moments.
           </p>
         </div>
       ) : !loading && (

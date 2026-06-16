@@ -1,6 +1,6 @@
 import * as svc from '../services/session.service.js';
 import * as pose from '../services/pose.service.js';
-import { findDuplicate, saveVideo, sha256Of } from '../services/upload.service.js';
+import { findDuplicate, saveVideo, sha256OfFile, discardTemp } from '../services/upload.service.js';
 import { processUploadedVideo } from '../services/videoProcessor.service.js';
 import { logger } from '../config/logger.js';
 import { prisma } from '../config/db.js';
@@ -53,11 +53,13 @@ export async function uploadVideo(req, res) {
   // instead of re-uploading + re-processing. We skip the duplicate path
   // when the user is uploading to a session that already has a different
   // video (then the upload is "replace this video", which is intentional).
-  const hash = sha256Of(req.file.buffer);
+  // Hash the temp file on disk (streamed — no full-file buffer in memory).
+  const hash = await sha256OfFile(req.file.path);
   const existing = await findDuplicate(req.user.id, hash);
   if (existing && existing.session.id !== req.params.id) {
-    // Tidy up: delete the empty placeholder session we just created. The
-    // user has nothing in it that needs preserving.
+    // Duplicate: drop the temp upload and the empty placeholder session, then
+    // bounce the user to the session that already holds this video.
+    await discardTemp(req.file);
     try { await svc.deleteSession(req.user.id, req.params.id); } catch { /* noop */ }
     return res.status(200).json({
       duplicate: true,
@@ -68,7 +70,7 @@ export async function uploadVideo(req, res) {
     });
   }
 
-  const asset = await saveVideo(req.params.id, req.file);
+  const asset = await saveVideo(req.params.id, req.file, hash);
 
   // Fire-and-forget pipeline: extract pose frames, then run sprint analysis.
   // The HTTP response goes out as soon as the file is on disk; the session

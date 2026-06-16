@@ -4,11 +4,16 @@
 // so a per-athlete consent gate isn't required to display it.
 
 import { prisma } from '../config/db.js';
+import { env } from '../config/env.js';
 
 export async function aggregate(_req, res) {
-  // Group every completed session by the country it was tagged with at capture
-  // time (falling back to the athlete's home country for legacy rows). The
-  // sprint score is LEFT JOINed so a freshly-recorded session lights up its
+  // Group completed, opted-in sessions by the country they were tagged with
+  // (falling back to the athlete's home country for legacy rows). Only sessions
+  // with public_ranking = true are included — an explicit, per-session consent
+  // captured at record/upload time — so nothing is published without consent.
+  // A HAVING floor (TALENT_MAP_MIN_ATHLETES) optionally suppresses tiny cohorts
+  // so a single athlete can't be de-anonymised. Output is aggregate-only.
+  // The sprint score is LEFT JOINed so a freshly-recorded session lights up its
   // country immediately, even before the async biomech score lands.
   const rows = await prisma.$queryRaw`
     SELECT
@@ -21,8 +26,10 @@ export async function aggregate(_req, res) {
     LEFT JOIN athlete a ON a.id = s.athlete_id
     LEFT JOIN metric  m ON m.session_id = s.id AND m.name = 'sprint.sprint_score'
     WHERE s.status = 'COMPLETED'
+      AND s.public_ranking = true
       AND COALESCE(s.country, a.country) IS NOT NULL
     GROUP BY COALESCE(s.country, a.country)
+    HAVING COUNT(DISTINCT s.user_id) >= ${env.TALENT_MAP_MIN_ATHLETES}
     ORDER BY sessions DESC;
   `;
   // BigInt → Number for the COUNT() outputs.

@@ -146,6 +146,10 @@ model Session {
   // start so the Global Talent Map can plot the country without needing a
   // full athlete profile. Falls back to the athlete's country when null.
   country     String?
+  // Per-session, informed opt-in: only sessions with this set true are
+  // aggregated into the public Global Talent Map. Defaults false so nothing
+  // is published without an explicit, disclosed choice at capture/upload time.
+  publicRanking Boolean      @default(false) @map("public_ranking")
   startedAt   DateTime       @default(now()) @map("started_at") @db.Timestamptz()
   endedAt     DateTime?      @map("ended_at") @db.Timestamptz()
   meta        Json           @default("{}")

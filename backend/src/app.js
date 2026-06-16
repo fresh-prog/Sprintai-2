@@ -46,6 +46,21 @@ export function buildApp() {
     }),
   );
 
+  // Tighter throttle on credential endpoints to slow brute-force / credential
+  // stuffing. Login + register share this stricter bucket on top of the global
+  // limiter above. Successful requests don't count toward the cap.
+  app.use(
+    ['/api/v1/auth/login', '/api/v1/auth/register'],
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 20,
+      skipSuccessfulRequests: true,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: { code: 'RATE_LIMITED', message: 'Too many attempts — try again later.' } },
+    }),
+  );
+
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
   app.get('/metrics', metricsHandler);
 

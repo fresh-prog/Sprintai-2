@@ -13,14 +13,30 @@ function normalizeDob(input) {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
+// Who may create/update/delete an athlete. RESEARCHERs are deliberately NOT
+// included — their access is read-only and anonymized (see anonymizeFor).
 function canManage(user, athlete) {
-  if (user.role === 'ADMIN' || user.role === 'RESEARCHER') return true;
+  if (user.role === 'ADMIN') return true;
   if (athlete.userId && athlete.userId === user.id) return true;
   if (athlete.coachId && athlete.coachId === user.id) return true;
   return false;
 }
 
+// Strip directly-identifying PII for the RESEARCHER role, which gets
+// population-wide read access for analysis but must not see who's who.
+function anonymizeFor(user, athlete) {
+  if (!athlete || user.role !== 'RESEARCHER') return athlete;
+  return {
+    ...athlete,
+    fullName: `Athlete ${String(athlete.id).slice(0, 8)}`,
+    dateOfBirth: null,
+    notes: null,
+  };
+}
+
 export async function createAthlete(user, data) {
+  // Researchers have read-only access; they can't create roster entries.
+  if (user.role === 'RESEARCHER') throw Forbidden();
   // Coaches default coachId to themselves; athletes default userId to themselves.
   const isCoach = user.role === 'COACH' || user.role === 'ADMIN';
   return prisma.athlete.create({
@@ -50,18 +66,25 @@ export async function listAthletes(user, { page = 1, limit = 50 } = {}) {
     }),
     prisma.athlete.count({ where }),
   ]);
-  return { data, page, limit, total };
+  return { data: data.map((a) => anonymizeFor(user, a)), page, limit, total };
 }
 
-export async function getAthlete(user, id) {
+// Internal: fetch + authorize WITHOUT anonymizing, for write paths that need
+// the real record (id, coachId, etc.). Read paths should use getAthlete.
+async function loadAuthorized(user, id) {
   const athlete = await prisma.athlete.findUnique({ where: { id } });
   if (!athlete) throw NotFound('Athlete not found');
+  // Owners/coaches/admin can access; researchers get read-only (handled below).
   if (!canManage(user, athlete) && user.role !== 'RESEARCHER') throw Forbidden();
   return athlete;
 }
 
+export async function getAthlete(user, id) {
+  return anonymizeFor(user, await loadAuthorized(user, id));
+}
+
 export async function updateAthlete(user, id, patch) {
-  const athlete = await getAthlete(user, id);
+  const athlete = await loadAuthorized(user, id);
   if (!canManage(user, athlete)) throw Forbidden();
   return prisma.athlete.update({
     where: { id: athlete.id },
@@ -70,7 +93,7 @@ export async function updateAthlete(user, id, patch) {
 }
 
 export async function deleteAthlete(user, id) {
-  const athlete = await getAthlete(user, id);
+  const athlete = await loadAuthorized(user, id);
   if (!canManage(user, athlete)) throw Forbidden();
   await prisma.athlete.delete({ where: { id: athlete.id } });
 }

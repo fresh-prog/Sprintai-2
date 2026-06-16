@@ -33,7 +33,20 @@ export async function issueRefreshToken(userId) {
 export async function rotateRefreshToken(raw) {
   const hash = sha256(raw);
   const existing = await prisma.refreshToken.findUnique({ where: { tokenHash: hash } });
-  if (!existing || existing.revokedAt || existing.expiresAt < new Date()) return null;
+  if (!existing) return null;
+
+  // Reuse detection: a token that's already been rotated (revoked) being
+  // presented again signals theft/replay. Revoke the whole family so neither
+  // the attacker nor the victim can keep using the chain — both must re-login.
+  if (existing.revokedAt) {
+    await prisma.refreshToken.updateMany({
+      where: { userId: existing.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    return null;
+  }
+  if (existing.expiresAt < new Date()) return null;
+
   await prisma.refreshToken.update({
     where: { id: existing.id },
     data: { revokedAt: new Date() },
